@@ -25,7 +25,7 @@ export interface Todo {
   pulseDuration?: number;
   completedAt?: Date;
   createdAt: Date;
-  originalDueDate?: Date;
+  originalDueDate: todo.originalDueDate ?? todo.dueDate ?? undefined,
 }
 
 export interface TodoStats {
