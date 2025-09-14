@@ -25,7 +25,7 @@ export interface Todo {
   pulseDuration?: number;
   completedAt?: Date;
   createdAt: Date;
-  originalDueDate: todo.originalDueDate ?? todo.dueDate ?? undefined,
+  originalDueDate?: Date;
 }
 
 export interface TodoStats {
@@ -153,7 +153,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
       ...todo,
         id: newId(),
       createdAt: new Date(),
-      originalDueDate: todo.dueDate ?? undefined, 
+      originalDueDate: todo.originalDueDate ?? todo.dueDate ?? undefined,
     };
     setTodos(prev => [...prev, newTodo]);
   };
@@ -174,7 +174,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
               dueDate: newDueDate,
               completedAt: undefined,
               createdAt: new Date(),
-              originalDueDate: todo.originalDueDate || todo.dueDate,
+              originalDueDate: todo.originalDueDate ?? todo.dueDate ?? undefined,
             };
             
             // Return both the completed task and the new recurring task
