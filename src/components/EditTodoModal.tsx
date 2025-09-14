@@ -4,20 +4,14 @@
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useTodos, Category, RepeatFrequency, Todo as TodoType } from "@/contexts/todocontext";
+import { useTodos, Category, RepeatFrequency, Todo } from "@/contexts/todocontext";
 import { startOfDay } from "date-fns";
 
-interface EditTodoModalProps {
-  todoItem: TodoType; // renamed to avoid conflict
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export type EditTodoModalProps = {
+export interface EditTodoModalProps {
   todo: Todo;
   isOpen: boolean;
   onClose: () => void;
-};
+}
 
 const categoryEmoji: Record<Category, string> = {
   academics: "📚",
@@ -27,25 +21,19 @@ const categoryEmoji: Record<Category, string> = {
   other: "📝",
 };
 
-// Time formatting helper
-const formatTimeForInput = (timeString: string | undefined): string => {
-  if (!timeString) return "";
-  return timeString;
-};
-
-export default function EditTodoModal({ todoItem, isOpen, onClose }: EditTodoModalProps) {
+export default function EditTodoModal({ todo, isOpen, onClose }: EditTodoModalProps) {
   const { updateTodo } = useTodos();
-  const [text, setText] = useState(todoItem.text);
-  const [description, setDescription] = useState(todoItem.description || "");
-  const [dueDate, setDueDate] = useState<Date | null>(todoItem.dueDate);
-  const [dueTime, setDueTime] = useState(todoItem.dueTime || "");
-  const [category, setCategory] = useState<Category>(todoItem.category);
-  const [repeat, setRepeat] = useState<RepeatFrequency>(todoItem.repeat);
+  const [text, setText] = useState(todo.text);
+  const [description, setDescription] = useState(todo.description || "");
+  const [dueDate, setDueDate] = useState<Date | null>(todo.dueDate);
+  const [dueTime, setDueTime] = useState(todo.dueTime || "");
+  const [category, setCategory] = useState<Category>(todo.category);
+  const [repeat, setRepeat] = useState<RepeatFrequency>(todo.repeat);
 
   const handleSave = () => {
     if (text.trim() === "") return;
 
-    updateTodo(todoItem.id, {
+    updateTodo(todo.id, {
       text: text.trim(),
       description: description.trim() || undefined,
       dueDate,
@@ -64,7 +52,7 @@ export default function EditTodoModal({ todoItem, isOpen, onClose }: EditTodoMod
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black opacity-90 flex items-center justify-center z-40">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40">
       <div className="bg-neutral-800 p-6 rounded-lg w-96 max-w-full mx-4">
         <h2 className="text-xl font-bold mb-4">Edit Task</h2>
 
@@ -135,7 +123,7 @@ export default function EditTodoModal({ todoItem, isOpen, onClose }: EditTodoMod
               </label>
               <input
                 type="time"
-                value={formatTimeForInput(dueTime)}
+                value={dueTime}
                 onChange={(e) => setDueTime(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-neutral-700 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-500"
               />
