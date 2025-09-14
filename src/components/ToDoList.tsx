@@ -15,7 +15,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  type SyntheticListenerMap
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -63,10 +62,10 @@ function formatDueLabel(date: Date) {
   return { label: `Due ${format(date, "MMMM do")}`, color: "text-red-500" };
 }
 
-interface DragHandleProps {
-  listeners?: SyntheticListenerMap;
-  attributes?: HTMLAttributes<HTMLButtonElement>;
-}
+type DragHandleProps = {
+  listeners?: Record<string, any>;
+  attributes?: Record<string, any>;
+};
 
 // Drag Handle Component
 export function DragHandle({ listeners, attributes }: DragHandleProps) {
