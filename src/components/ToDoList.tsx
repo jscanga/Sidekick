@@ -399,7 +399,7 @@ export default function ToDoList() {
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full h-full p-6 bg-neutral-900 text-white rounded-lg shadow-lg">
+    <div className="flex flex-col gap-4 w-full min-h-screen p-6 bg-neutral-900 text-white rounded-lg shadow-lg">
       {/* Header section */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">To-Do List</h1>
