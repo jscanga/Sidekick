@@ -4,7 +4,7 @@
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useTodos, Category, RepeatFrequency } from "@/contexts/todocontext";
+import { useTodos, Category, RepeatFrequency, Todo } from "@/contexts/todocontext";
 import { startOfDay } from "date-fns";
 
 interface EditTodoModalProps {
@@ -26,6 +26,16 @@ const formatTimeForInput = (timeString: string | undefined): string => {
   if (!timeString) return '';
   return timeString;
 };
+
+export interface Todo {
+  id: string;
+  text: string;
+  description?: string;
+  dueDate: Date | null;
+  dueTime?: string;
+  category: Category;
+  repeat: RepeatFrequency;
+}
 
 export default function EditTodoModal({ todo, isOpen, onClose }: EditTodoModalProps) {
   const { updateTodo } = useTodos();
