@@ -302,6 +302,7 @@ export default function ToDoList() {
       repeat,
       pulseDelay: Math.random() * 1.5,
       pulseDuration: 1.8 + Math.random() * 0.7,
+      createdAt: new Date(),
     };
 
     contextAddTodo(newTask);
