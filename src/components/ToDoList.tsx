@@ -7,6 +7,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RepeatFrequency, Todo, Category } from '@/contexts/todocontext';
 import EditTodoModal from "./EditTodoModal";
+import { SyntheticListenerMap } from "@dnd-kit/core";
+
 import {
   DndContext,
   closestCenter,
@@ -60,12 +62,12 @@ function formatDueLabel(date: Date) {
   if (diffDays > 1) return { label: `Due ${format(date, "MMMM do")}`, color: "text-green-400" };
   return { label: `Due ${format(date, "MMMM do")}`, color: "text-red-500" };
 }
-
+interface DragHandleProps {
+  listeners?: SyntheticListenerMap; // optional, matches useSortable
+  attributes?: Record<string, any>; // can be string/boolean/anything
+}
 // Drag Handle Component
-function DragHandle({ listeners, attributes }: { 
-  listeners: Record<string, () => void>; 
-  attributes: Record<string, string | boolean>; 
-}) {
+export function DragHandle({ listeners, attributes }: DragHandleProps) {
   return (
     <button
       {...listeners}
@@ -177,7 +179,7 @@ export function SortableItem({ todo, toggle, onComplete }: SortableItemProps) {
       >
         {/* Left side: Drag handle + Checkbox + Category */}
         <div className="flex items-center shrink-0">
-          <DragHandle listeners={listeners ?? {}} attributes={attributes} />
+          <DragHandle listeners={listeners} attributes={attributes} />
           
           <button
             onPointerDown={(e) => e.stopPropagation()}
