@@ -15,10 +15,10 @@ export type RepeatFrequency = 'none' | 'weekly' | 'monthly' | 'yearly';
 export interface Todo {
   id: string;
   text: string;
-  description?: string
+  description?: string;
   completed: boolean;
   dueDate: Date | null;
-  dueTime?: string
+  dueTime?: string;
   category: Category;
   repeat: RepeatFrequency;
   pulseDelay?: number;
@@ -89,28 +89,32 @@ const saveTodosToStorage = (todos: Todo[]) => {
 export function TodoProvider({ children }: { children: React.ReactNode }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
-  interface Stats {
-  totalCompleted: number;
-  completedToday: number;
-  completedThisWeek: number;
-  completedThisMonth: number;
-  completedThisYear: number;
-  currentStreak: number;
-  longestStreak: number;
-  bestDay: { date: Date; count: number } | null;
-  bestWeek: { weekStart: Date; count: number } | null;
-  bestMonth: { monthStart: Date; count: number } | null;
-  bestYear: { year: number; count: number } | null;
-  mostProductiveWeekday: { weekday: string; average: number } | null;
-  completedByWeekday: Record<number, { total: number; average: number }>;
-  completedByCategory: {
-    academics: number;
-    health: number;
-    financial: number;
-    social: number;
-    other: number;
+  
+  // Define the initial stats with proper typing
+  const initialStats: TodoStats = {
+    totalCompleted: 0,
+    completedToday: 0,
+    completedThisWeek: 0,
+    completedThisMonth: 0,
+    completedThisYear: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    bestDay: { date: new Date(), count: 0 },
+    bestWeek: { weekStart: startOfWeek(new Date()), count: 0 },
+    bestMonth: { monthStart: startOfMonth(new Date()), count: 0 },
+    bestYear: { year: getYear(new Date()), count: 0 },
+    mostProductiveWeekday: { weekday: 'Sunday', average: 0 },
+    completedByWeekday: {},
+    completedByCategory: {
+      academics: 0,
+      health: 0,
+      financial: 0,
+      social: 0,
+      other: 0
+    }
   };
-}
+
+  const [stats, setStats] = useState<TodoStats>(initialStats);
 
   useEffect(() => {
     const storedTodos = getStoredTodos();
@@ -127,74 +131,74 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
   }, [todos, hasHydrated]);
 
   const addTodo = (todo: Omit<Todo, 'id' | 'createdAt' | 'originalDueDate'>) => {
-  const newTodo: Todo = {
-    ...todo,
-    id: newId(),
-    createdAt: new Date(),
-    originalDueDate: todo.dueDate,
+    const newTodo: Todo = {
+      ...todo,
+      id: newId(),
+      createdAt: new Date(),
+      originalDueDate: todo.dueDate,
+    };
+    setTodos(prev => [...prev, newTodo]);
   };
-  setTodos(prev => [...prev, newTodo]);
-};
 
   const toggleTodo = (id: string) => {
-  setTodos(prev =>
-    prev.map(todo => {
-      if (todo.id === id) {
-        const newCompletedState = !todo.completed;
-        
-        if (newCompletedState && todo.repeat !== 'none') {
-          // Create a new recurring task
-          const newDueDate = calculateNextDueDate(todo.dueDate, todo.repeat);
-          const newTask: Todo = {
-            ...todo,
-            id: newId(),
-            completed: false,
-            dueDate: newDueDate,
-            completedAt: undefined,
-            createdAt: new Date(),
-            originalDueDate: todo.originalDueDate || todo.dueDate,
-          };
+    setTodos(prev =>
+      prev.map(todo => {
+        if (todo.id === id) {
+          const newCompletedState = !todo.completed;
           
-          // Return both the completed task and the new recurring task
-          return [
-            { ...todo, completed: newCompletedState, completedAt: newCompletedState ? new Date() : undefined },
-            newTask
-          ];
+          if (newCompletedState && todo.repeat !== 'none') {
+            // Create a new recurring task
+            const newDueDate = calculateNextDueDate(todo.dueDate, todo.repeat);
+            const newTask: Todo = {
+              ...todo,
+              id: newId(),
+              completed: false,
+              dueDate: newDueDate,
+              completedAt: undefined,
+              createdAt: new Date(),
+              originalDueDate: todo.originalDueDate || todo.dueDate,
+            };
+            
+            // Return both the completed task and the new recurring task
+            return [
+              { ...todo, completed: newCompletedState, completedAt: newCompletedState ? new Date() : undefined },
+              newTask
+            ];
+          }
+          
+          return {
+            ...todo,
+            completed: newCompletedState,
+            completedAt: newCompletedState ? new Date() : undefined
+          };
         }
-        
-        return {
-          ...todo,
-          completed: newCompletedState,
-          completedAt: newCompletedState ? new Date() : undefined
-        };
-      }
-      return todo;
-    }).flat() // Flatten the array in case we added new tasks
-  );
-};
+        return todo;
+      }).flat() // Flatten the array in case we added new tasks
+    );
+  };
 
-const calculateNextDueDate = (dueDate: Date | null, repeat: RepeatFrequency): Date | null => {
-  if (!dueDate) return null;
-  
-  const nextDate = new Date(dueDate);
-  
-  switch (repeat) {
-    case 'weekly':
-      nextDate.setDate(nextDate.getDate() + 7);
-      break;
-    case 'monthly':
-      nextDate.setMonth(nextDate.getMonth() + 1);
-      break;
-    case 'yearly':
-      nextDate.setFullYear(nextDate.getFullYear() + 1);
-      break;
-    case 'none':
-    default:
-      return dueDate;
-  }
-  
-  return nextDate;
-};
+  const calculateNextDueDate = (dueDate: Date | null, repeat: RepeatFrequency): Date | null => {
+    if (!dueDate) return null;
+    
+    const nextDate = new Date(dueDate);
+    
+    switch (repeat) {
+      case 'weekly':
+        nextDate.setDate(nextDate.getDate() + 7);
+        break;
+      case 'monthly':
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        break;
+      case 'yearly':
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+        break;
+      case 'none':
+      default:
+        return dueDate;
+    }
+    
+    return nextDate;
+  };
 
   const deleteTodo = (id: string) => setTodos(prev => prev.filter(todo => todo.id !== id));
   const updateTodo = (id: string, updates: Partial<Todo>) => setTodos(prev => prev.map(todo => todo.id === id ? { ...todo, ...updates } : todo));
