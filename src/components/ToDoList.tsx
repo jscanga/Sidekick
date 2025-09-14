@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { HTMLAttributes } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RepeatFrequency, Todo, Category } from '@/contexts/todocontext';
@@ -63,8 +64,8 @@ function formatDueLabel(date: Date) {
   return { label: `Due ${format(date, "MMMM do")}`, color: "text-red-500" };
 }
 interface DragHandleProps {
-  listeners?: SyntheticListenerMap; // optional, matches useSortable
-  attributes?: Record<string, any>; // can be string/boolean/anything
+  listeners?: SyntheticListenerMap; // keep as is
+  attributes?: HTMLAttributes<HTMLButtonElement>; // replace Record<string, any>
 }
 // Drag Handle Component
 export function DragHandle({ listeners, attributes }: DragHandleProps) {
