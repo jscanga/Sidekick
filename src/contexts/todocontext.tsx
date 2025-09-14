@@ -149,12 +149,14 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
   }, [todos, hasHydrated]);
 
   const addTodo = (todo: Omit<Todo, 'id' | 'createdAt' | 'originalDueDate'>) => {
-    const newTodo: Todo = {
-      ...todo,
-        id: newId(),
-      createdAt: new Date(),
-      originalDueDate: todo.originalDueDate ?? todo.dueDate ?? undefined,
-    };
+  const newTodo: Todo = {
+    ...todo,
+    id: newId(),
+    createdAt: new Date(),
+    originalDueDate: todo.dueDate ?? undefined, // only use dueDate here
+  };
+  setTodos(prev => [...prev, newTodo]);
+};
     setTodos(prev => [...prev, newTodo]);
   };
 
