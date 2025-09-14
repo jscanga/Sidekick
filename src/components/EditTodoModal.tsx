@@ -13,6 +13,12 @@ interface EditTodoModalProps {
   onClose: () => void;
 }
 
+export type EditTodoModalProps = {
+  todo: Todo;
+  isOpen: boolean;
+  onClose: () => void;
+};
+
 const categoryEmoji: Record<Category, string> = {
   academics: "📚",
   health: "🏃",
