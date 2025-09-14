@@ -62,19 +62,37 @@ const TodoContext = createContext<TodoContextType | undefined>(undefined);
 
 const newId = () => crypto.randomUUID();
 
+// Define interface for the stored todo data
+interface StoredTodo {
+  id: string;
+  text: string;
+  description?: string;
+  completed: boolean;
+  dueDate: string | null;
+  dueTime?: string;
+  category: Category;
+  repeat: RepeatFrequency;
+  pulseDelay?: number;
+  pulseDuration?: number;
+  completedAt?: string;
+  createdAt: string;
+  originalDueDate?: string;
+}
+
 const getStoredTodos = (): Todo[] => {
   if (typeof window === 'undefined') return [];
   try {
     const stored = localStorage.getItem('todoList');
     if (!stored) return [];
-    const parsed = JSON.parse(stored);
-    return parsed.map((todo: any) => ({
+    const parsed: StoredTodo[] = JSON.parse(stored);
+    return parsed.map((todo: StoredTodo) => ({
       ...todo,
       dueDate: todo.dueDate ? new Date(todo.dueDate) : null,
       completedAt: todo.completedAt ? new Date(todo.completedAt) : undefined,
       createdAt: todo.createdAt ? new Date(todo.createdAt) : new Date(),
       description: todo.description || undefined,
       dueTime: todo.dueTime || undefined,
+      originalDueDate: todo.originalDueDate ? new Date(todo.originalDueDate) : undefined,
     }));
   } catch {
     return [];
