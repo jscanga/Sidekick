@@ -89,22 +89,28 @@ const saveTodosToStorage = (todos: Todo[]) => {
 export function TodoProvider({ children }: { children: React.ReactNode }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
-  const [stats, setStats] = useState<TodoStats>({
-    totalCompleted: 0,
-    completedToday: 0,
-    completedThisWeek: 0,
-    completedThisMonth: 0,
-    completedThisYear: 0,
-    completedByCategory: { academics: 0, health: 0, financial: 0, social: 0, other: 0 },
-    completedByWeekday: {},
-    bestDay: { date: new Date(), count: 0 },
-    bestWeek: { weekStart: startOfWeek(new Date()), count: 0 },
-    bestMonth: { monthStart: startOfMonth(new Date()), count: 0 },
-    bestYear: { year: getYear(new Date()), count: 0 },
-    mostProductiveWeekday: { weekday: 'Sunday', average: 0 },
-    currentStreak: 0,
-    longestStreak: 0,
-  });
+  interface Stats {
+  totalCompleted: number;
+  completedToday: number;
+  completedThisWeek: number;
+  completedThisMonth: number;
+  completedThisYear: number;
+  currentStreak: number;
+  longestStreak: number;
+  bestDay: { date: Date; count: number } | null;
+  bestWeek: { weekStart: Date; count: number } | null;
+  bestMonth: { monthStart: Date; count: number } | null;
+  bestYear: { year: number; count: number } | null;
+  mostProductiveWeekday: { weekday: string; average: number } | null;
+  completedByWeekday: Record<number, { total: number; average: number }>;
+  completedByCategory: {
+    academics: number;
+    health: number;
+    financial: number;
+    social: number;
+    other: number;
+  };
+}
 
   useEffect(() => {
     const storedTodos = getStoredTodos();
