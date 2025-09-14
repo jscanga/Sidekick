@@ -5,7 +5,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import CustomDatePicker from "./datePicker";
 import { RepeatFrequency } from '@/contexts/todocontext';
 import EditTodoModal from "./EditTodoModal";
 import {
@@ -570,3 +569,4 @@ return (
     </div>
   </div>
 );
+}
