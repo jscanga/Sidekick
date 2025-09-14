@@ -1,7 +1,7 @@
-// src/components/ToDoList.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, HTMLAttributes } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -43,13 +43,6 @@ const categoryEmoji: Record<Category, string> = {
   other: "📝",
 };
 
-const repeatEmoji: Record<RepeatFrequency, string> = {
-  none: '',
-  weekly: ' 🔄',
-  monthly: ' 🔄',
-  yearly: ' 🔄',
-};
-
 type ViewMode = 'daily' | 'weekly' | 'monthly' | 'all';
 
 function formatDueLabel(date: Date) {
@@ -62,6 +55,7 @@ function formatDueLabel(date: Date) {
   return { label: `Due ${format(date, "MMMM do")}`, color: "text-red-500" };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DragHandleProps = {
   listeners?: Record<string, any>;
   attributes?: Record<string, any>;
