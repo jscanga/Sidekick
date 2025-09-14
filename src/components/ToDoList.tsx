@@ -8,7 +8,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RepeatFrequency, Todo, Category } from '@/contexts/todocontext';
 import EditTodoModal from "./EditTodoModal";
-import { SyntheticListenerMap } from "@dnd-kit/core";
 
 import {
   DndContext,
@@ -63,10 +62,12 @@ function formatDueLabel(date: Date) {
   if (diffDays > 1) return { label: `Due ${format(date, "MMMM do")}`, color: "text-green-400" };
   return { label: `Due ${format(date, "MMMM do")}`, color: "text-red-500" };
 }
+
 interface DragHandleProps {
-  listeners?: SyntheticListenerMap; // keep as is
-  attributes?: HTMLAttributes<HTMLButtonElement>; // replace Record<string, any>
+  listeners?: Record<string, () => void>;
+  attributes?: HTMLAttributes<HTMLButtonElement>;
 }
+
 // Drag Handle Component
 export function DragHandle({ listeners, attributes }: DragHandleProps) {
   return (
