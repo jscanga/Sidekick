@@ -1,9 +1,8 @@
 // src/components/ToDoList.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, HTMLAttributes } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HTMLAttributes } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RepeatFrequency, Todo, Category } from '@/contexts/todocontext';
@@ -16,6 +15,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  type SyntheticListenerMap
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -64,7 +64,7 @@ function formatDueLabel(date: Date) {
 }
 
 interface DragHandleProps {
-  listeners?: Record<string, () => void>;
+  listeners?: SyntheticListenerMap;
   attributes?: HTMLAttributes<HTMLButtonElement>;
 }
 
