@@ -5,7 +5,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { RepeatFrequency } from '@/contexts/todocontext';
+import { RepeatFrequency, Todo, Category } from '@/contexts/todocontext';
 import EditTodoModal from "./EditTodoModal";
 import {
   DndContext,
@@ -16,7 +16,6 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
@@ -25,7 +24,7 @@ import {
   format, 
   differenceInCalendarDays, 
   startOfDay, 
-  startOfWeek,  // Make sure this is included
+  startOfWeek,
   startOfMonth, 
   isSameDay, 
   isSameWeek, 
@@ -33,7 +32,7 @@ import {
 } from "date-fns";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { useTodos, Category } from "@/contexts/todocontext";
+import { useTodos } from "@/contexts/todocontext";
 
 const categoryEmoji: Record<Category, string> = {
   academics: "📚",
@@ -49,7 +48,9 @@ const repeatEmoji: Record<RepeatFrequency, string> = {
   monthly: ' 🔄',
   yearly: ' 🔄',
 };
+
 type ViewMode = 'daily' | 'weekly' | 'monthly' | 'all';
+
 function formatDueLabel(date: Date) {
   const today = startOfDay(new Date());
   const diffDays = differenceInCalendarDays(date, today);
@@ -62,8 +63,8 @@ function formatDueLabel(date: Date) {
 
 // Drag Handle Component
 function DragHandle({ listeners, attributes }: { 
-  listeners: any; 
-  attributes: any; 
+  listeners: Record<string, () => void>; 
+  attributes: Record<string, string | boolean>; 
 }) {
   return (
     <button
@@ -93,11 +94,13 @@ function DragHandle({ listeners, attributes }: {
   );
 }
 
-export function SortableItem({ todo, toggle, onComplete }: { 
-  todo: Todo; 
+interface SortableItemProps {
+  todo: Todo;
   toggle: (id: string) => void;
   onComplete: (id: string) => void;
-}) {
+}
+
+export function SortableItem({ todo, toggle, onComplete }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: todo.id });
   const [isCompleting, setIsCompleting] = useState(false);
@@ -151,134 +154,136 @@ export function SortableItem({ todo, toggle, onComplete }: {
     }
   };
 
-return (
-  <>
-    <motion.li
-      ref={setNodeRef}
-      style={baseStyle}
-      layout
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ 
-        opacity: isCompleting ? 0 : 1, 
-        y: 0,
-        scale: isCompleting ? 0.95 : 1
-      }}
-      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-      transition={{ 
-        duration: 0.3,
-        ease: "easeInOut"
-      }}
-      className={`flex items-center px-4 py-3 rounded transition-colors ${bgClass} ${pulseClass} ${
-        isDragging ? "opacity-50 shadow-lg" : ""
-      } ${isCompleting ? "bg-green-500/20" : ""}`}
-    >
-      {/* Left side: Drag handle + Checkbox + Category */}
-      <div className="flex items-center shrink-0">
-        <DragHandle listeners={listeners} attributes={attributes} />
-        
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={handleComplete}
-          aria-label="Mark complete"
-          aria-checked={todo.completed}
-          className={`h-6 w-6 flex items-center justify-center rounded border-2 mr-3 shrink-0 transition-all duration-300 ${
-            todo.completed || isCompleting 
-              ? "bg-green-500 border-green-500 text-white scale-110" 
-              : "border-gray-500 text-transparent hover:border-green-400"
-          }`}
-        >
-          {todo.completed || isCompleting ? (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-            >
-              ✓
-            </motion.span>
-          ) : ""}
-        </button>
+  return (
+    <>
+      <motion.li
+        ref={setNodeRef}
+        style={baseStyle}
+        layout
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ 
+          opacity: isCompleting ? 0 : 1, 
+          y: 0,
+          scale: isCompleting ? 0.95 : 1
+        }}
+        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+        transition={{ 
+          duration: 0.3,
+          ease: "easeInOut"
+        }}
+        className={`flex items-center px-4 py-3 rounded transition-colors ${bgClass} ${pulseClass} ${
+          isDragging ? "opacity-50 shadow-lg" : ""
+        } ${isCompleting ? "bg-green-500/20" : ""}`}
+      >
+        {/* Left side: Drag handle + Checkbox + Category */}
+        <div className="flex items-center shrink-0">
+          <DragHandle listeners={listeners} attributes={attributes} />
+          
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={handleComplete}
+            aria-label="Mark complete"
+            aria-pressed={todo.completed}
+            className={`h-6 w-6 flex items-center justify-center rounded border-2 mr-3 shrink-0 transition-all duration-300 ${
+              todo.completed || isCompleting 
+                ? "bg-green-500 border-green-500 text-white scale-110" 
+                : "border-gray-500 text-transparent hover:border-green-400"
+            }`}
+          >
+            {todo.completed || isCompleting ? (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              >
+                ✓
+              </motion.span>
+            ) : ""}
+          </button>
 
-        <span className="text-xl mr-3">{categoryEmoji[todo.category]}</span>
-      </div>
+          <span className="text-xl mr-3">{categoryEmoji[todo.category]}</span>
+        </div>
 
-      {/* Middle: Task name + description */}
-      <div className="flex-1 flex items-center min-w-0">
-        {/* Task Name */}
-        <span className={`${textClass} truncate`}>{todo.text}</span>
-        
-        {/* Description - directly to the right of task name */}
-        {todo.description && (
-          <span className="text-gray-400 italic text-sm ml-5 truncate">
-            {todo.description}
-          </span>
-        )}
-      </div>
-
-      {/* Right side: Edit button + Repeat indicator + Due date */}
-      <div className="flex items-center gap-2 shrink-0 ml-4">
-        {/* Edit Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
-          className="text-gray-400 hover:text-gray-200 transition-colors shrink-0"
-          aria-label="Edit task"
-        >
-          ✏️
-        </button>
-
-        {/* Repeat Indicator */}
-        {todo.repeat !== 'none' && (
-          <span className="text-lg shrink-0" title={`Repeats ${todo.repeat}`}>🔄</span>
-        )}
-
-        {todo.dueDate && (
-          <div className="flex flex-col items-end text-right ml-4 shrink-0">
-            {/* First line: Only the due text (no time) */}
-            <span className={`text-sm ${dueTextClass} whitespace-nowrap`}>
-              {daysLeft < 0
-                ? `Overdue ${format(todo.dueDate, "MMM d")}`
-                : daysLeft === 0
-                ? "Due Today"
-                : daysLeft === 1
-                ? "Due Tomorrow"
-                : `Due ${format(todo.dueDate, "MMM d")}`}
+        {/* Middle: Task name + description */}
+        <div className="flex-1 flex items-center min-w-0">
+          {/* Task Name */}
+          <span className={`${textClass} truncate`}>{todo.text}</span>
+          
+          {/* Description - directly to the right of task name */}
+          {todo.description && (
+            <span className="text-gray-400 italic text-sm ml-5 truncate">
+              {todo.description}
             </span>
-            
-            {/* Second line: Time + "Today" or days count */}
-            {daysLeft !== null && (
-              <span className="text-xs text-gray-400 whitespace-nowrap">
-                {daysLeft === 0
-                  ? todo.dueTime ? `${formatTime(todo.dueTime)} Today` : "Today"
-                  : daysLeft > 0
-                  ? `${daysLeft} days`
-                  : `${Math.abs(daysLeft)} days ago`}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </motion.li>
+          )}
+        </div>
 
-    {/* Edit Modal */}
-    <EditTodoModal
-      todo={todo}
-      isOpen={isEditing}
-      onClose={() => setIsEditing(false)}
-    />
-  </>
-);}
+        {/* Right side: Edit button + Repeat indicator + Due date */}
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          {/* Edit Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+            className="text-gray-400 hover:text-gray-200 transition-colors shrink-0"
+            aria-label="Edit task"
+          >
+            ✏️
+          </button>
+
+          {/* Repeat Indicator */}
+          {todo.repeat !== 'none' && (
+            <span className="text-lg shrink-0" title={`Repeats ${todo.repeat}`}>🔄</span>
+          )}
+
+          {todo.dueDate && (
+            <div className="flex flex-col items-end text-right ml-4 shrink-0">
+              {/* First line: Only the due text (no time) */}
+              <span className={`text-sm ${dueTextClass} whitespace-nowrap`}>
+                {daysLeft !== null && daysLeft < 0
+                  ? `Overdue ${format(todo.dueDate, "MMM d")}`
+                  : daysLeft === 0
+                  ? "Due Today"
+                  : daysLeft === 1
+                  ? "Due Tomorrow"
+                  : `Due ${format(todo.dueDate, "MMM d")}`}
+              </span>
+              
+              {/* Second line: Time + "Today" or days count */}
+              {daysLeft !== null && (
+                <span className="text-xs text-gray-400 whitespace-nowrap">
+                  {daysLeft === 0
+                    ? todo.dueTime ? `${formatTime(todo.dueTime)} Today` : "Today"
+                    : daysLeft > 0
+                    ? `${daysLeft} days`
+                    : `${Math.abs(daysLeft)} days ago`}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.li>
+
+      {/* Edit Modal */}
+      <EditTodoModal
+        todo={todo}
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+      />
+    </>
+  );
+}
 
 export const formatTime = (timeString: string): string => {
   if (!timeString) return '';
   
   const [hours, minutes] = timeString.split(':').map(Number);
   const period = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12; // Convert 0, 13, 14, etc. to 12, 1, 2, etc.
+  const displayHours = hours % 12 || 12;
   
   return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 };
+
 export default function ToDoList() {
   const { todos, toggleTodo, deleteTodo, addTodo: contextAddTodo, reorderTodos, setTodos } = useTodos();
   const [newTodo, setNewTodo] = useState("");
@@ -288,7 +293,6 @@ export default function ToDoList() {
   const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
   const [repeat, setRepeat] = useState<RepeatFrequency>('none');
   const [viewMode, setViewMode] = useState<ViewMode>('all');
-
 
   const addTodo = () => {
     if (newTodo.trim() === "" || (dueDate && dueDate < startOfDay(new Date()))) return;
@@ -346,40 +350,42 @@ export default function ToDoList() {
       setDueDate(null);
     }
   };
-  const filterTodosByViewMode = (todos: Todo[]) => {
-  const now = new Date();
-  const today = startOfDay(now);
-  const weekStart = startOfWeek(now);
-  const monthStart = startOfMonth(now);
 
-  switch (viewMode) {
-    case 'daily':
-      return todos.filter(todo => 
-        todo.dueDate && isSameDay(todo.dueDate, today)
-      );
-    case 'weekly':
-      return todos.filter(todo => 
-        todo.dueDate && isSameWeek(todo.dueDate, weekStart)
-      );
-    case 'monthly':
-      return todos.filter(todo => 
-        todo.dueDate && isSameMonth(todo.dueDate, monthStart)
-      );
-    case 'all':
-    default:
-      return todos;
-  }
-};
+  const filterTodosByViewMode = (todos: Todo[]) => {
+    const now = new Date();
+    const today = startOfDay(now);
+    const weekStart = startOfWeek(now);
+    const monthStart = startOfMonth(now);
+
+    switch (viewMode) {
+      case 'daily':
+        return todos.filter(todo => 
+          todo.dueDate && isSameDay(todo.dueDate, today)
+        );
+      case 'weekly':
+        return todos.filter(todo => 
+          todo.dueDate && isSameWeek(todo.dueDate, weekStart)
+        );
+      case 'monthly':
+        return todos.filter(todo => 
+          todo.dueDate && isSameMonth(todo.dueDate, monthStart)
+        );
+      case 'all':
+      default:
+        return todos;
+    }
+  };
+
   // Get active todos (filter out completed and currently completing items)
   const activeTodos = filterTodosByViewMode(
     todos.filter((todo) => !todo.completed && !completingIds.has(todo.id))
-    ).sort((a, b) => {
-      if (a.dueDate && b.dueDate) {
-        return a.dueDate.getTime() - b.dueDate.getTime();
+  ).sort((a, b) => {
+    if (a.dueDate && b.dueDate) {
+      return a.dueDate.getTime() - b.dueDate.getTime();
     }
-      if (a.dueDate && !b.dueDate) return -1;
-        if (!a.dueDate && b.dueDate) return 1;
-          return 0;
+    if (a.dueDate && !b.dueDate) return -1;
+    if (!a.dueDate && b.dueDate) return 1;
+    return 0;
   });
 
   const completedTodos = todos.filter((todo) => todo.completed);
@@ -394,179 +400,179 @@ export default function ToDoList() {
     reorderTodos(active.id as string, over.id as string);
   };
 
-return (
-  <div className="flex flex-col gap-4 w-full h-full p-6 bg-neutral-900 text-white rounded-lg shadow-lg">
-    {/* Header section */}
-    <div className="flex justify-between items-center mb-4">
-      <h1 className="text-3xl font-bold">To-Do List</h1>
-      
-      {/* View Mode Selector Dropdown */}
-      <select
-        value={viewMode}
-        onChange={(e) => setViewMode(e.target.value as ViewMode)}
-        className="px-4 py-2 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600 transition-colors"
-      >
-        <option value="all">All Tasks</option>
-        <option value="daily">📅 Daily</option>
-        <option value="weekly">📅 Weekly</option>
-        <option value="monthly">📅 Monthly</option>
-      </select>
-    </div>
-
-    {/* DndContext for active todos */}
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      modifiers={[restrictToVerticalAxis]}
-    >
-      <SortableContext items={activeTodos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-        <ul className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-[150px]">
-          <AnimatePresence mode="popLayout">
-            {activeTodos.length === 0 ? (
-              <motion.li
-                key="empty-state"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-gray-400 italic text-center mt-8"
-              >
-                🎉 You're all caught up!
-              </motion.li>
-            ) : (
-              activeTodos.map((todo) => (
-                <SortableItem 
-                  key={todo.id} 
-                  todo={todo} 
-                  toggle={toggleTodo}
-                  onComplete={handleComplete}
-                />
-              ))
-            )}
-          </AnimatePresence>
-        </ul>
-      </SortableContext>
-    </DndContext>
-
-    {/* COMPLETED TASKS SECTION - MOVED ABOVE ADD TASK */}
-    {completedTodos.length > 0 && (
-      <div className="mt-4">
-        <button
-          onClick={() => setShowCompleted((prev) => !prev)}
-          className="px-4 py-2 bg-neutral-700 hover:bg-neutral-500 rounded-lg text-white transition-colors"
+  return (
+    <div className="flex flex-col gap-4 w-full h-full p-6 bg-neutral-900 text-white rounded-lg shadow-lg">
+      {/* Header section */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold">To-Do List</h1>
+        
+        {/* View Mode Selector Dropdown */}
+        <select
+          value={viewMode}
+          onChange={(e) => setViewMode(e.target.value as ViewMode)}
+          className="px-4 py-2 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600 transition-colors"
         >
-          {showCompleted ? "Hide" : "Show"} Completed Tasks ({completedTodos.length})
-        </button>
+          <option value="all">All Tasks</option>
+          <option value="daily">📅 Daily</option>
+          <option value="weekly">📅 Weekly</option>
+          <option value="monthly">📅 Monthly</option>
+        </select>
+      </div>
 
-        {showCompleted && (
-          <ul className="flex flex-col gap-2 mt-2 max-h-40 overflow-y-auto">
+      {/* DndContext for active todos */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToVerticalAxis]}
+      >
+        <SortableContext items={activeTodos.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          <ul className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-[150px]">
             <AnimatePresence mode="popLayout">
-              {completedTodos.map((todo) => (
+              {activeTodos.length === 0 ? (
                 <motion.li
-                  key={todo.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex justify-between items-center px-4 py-2 rounded bg-neutral-800 text-gray-400 line-through hover:bg-gray-600 transition-colors"
+                  key="empty-state"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-gray-400 italic text-center mt-8"
                 >
-                  <span 
-                    onClick={() => {
-                      toggleTodo(todo.id);
-                      setShowCompleted(prev => {
-                        setTimeout(() => setShowCompleted(prev), 10);
-                        return !prev;
-                      });
-                    }} 
-                    className="cursor-pointer flex-1"
-                  >
-                    {todo.text}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="text-gray-400 hover:text-gray-200 transition-colors"
-                      aria-label="Edit task"
-                    >
-                      ✏️
-                    </button>
-                    
-                    {todo.dueDate && (
-                      <div className="flex flex-col items-end text-right">
-                        <span className="text-sm text-gray-500">{formatDueLabel(todo.dueDate).label}</span>
-                        <span className="text-xs text-gray-500">
-                          {differenceInCalendarDays(todo.dueDate, startOfDay(new Date())) === 0
-                            ? "Today"
-                            : `${Math.abs(differenceInCalendarDays(todo.dueDate, startOfDay(new Date())))} days`}
-                        </span>
-                      </div>
-                    )}
-                    <button onClick={() => deleteTodo(todo.id)} className="text-red-500 hover:text-red-400">
-                      🗑️
-                    </button>
-                  </div>
+                  🎉 You&apos;re all caught up!
                 </motion.li>
-              ))}
+              ) : (
+                activeTodos.map((todo) => (
+                  <SortableItem 
+                    key={todo.id} 
+                    todo={todo} 
+                    toggle={toggleTodo}
+                    onComplete={handleComplete}
+                  />
+                ))
+              )}
             </AnimatePresence>
           </ul>
-        )}
+        </SortableContext>
+      </DndContext>
+
+      {/* COMPLETED TASKS SECTION */}
+      {completedTodos.length > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setShowCompleted((prev) => !prev)}
+            className="px-4 py-2 bg-neutral-700 hover:bg-neutral-500 rounded-lg text-white transition-colors"
+          >
+            {showCompleted ? "Hide" : "Show"} Completed Tasks ({completedTodos.length})
+          </button>
+
+          {showCompleted && (
+            <ul className="flex flex-col gap-2 mt-2 max-h-40 overflow-y-auto">
+              <AnimatePresence mode="popLayout">
+                {completedTodos.map((todo) => (
+                  <motion.li
+                    key={todo.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex justify-between items-center px-4 py-2 rounded bg-neutral-800 text-gray-400 line-through hover:bg-gray-600 transition-colors"
+                  >
+                    <span 
+                      onClick={() => {
+                        toggleTodo(todo.id);
+                        setShowCompleted(prev => {
+                          setTimeout(() => setShowCompleted(prev), 10);
+                          return !prev;
+                        });
+                      }} 
+                      className="cursor-pointer flex-1"
+                    >
+                      {todo.text}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        className="text-gray-400 hover:text-gray-200 transition-colors"
+                        aria-label="Edit task"
+                      >
+                        ✏️
+                      </button>
+                      
+                      {todo.dueDate && (
+                        <div className="flex flex-col items-end text-right">
+                          <span className="text-sm text-gray-500">{formatDueLabel(todo.dueDate).label}</span>
+                          <span className="text-xs text-gray-500">
+                            {differenceInCalendarDays(todo.dueDate, startOfDay(new Date())) === 0
+                              ? "Today"
+                              : `${Math.abs(differenceInCalendarDays(todo.dueDate, startOfDay(new Date())))} days`}
+                          </span>
+                        </div>
+                      )}
+                      <button onClick={() => deleteTodo(todo.id)} className="text-red-500 hover:text-red-400">
+                        🗑️
+                      </button>
+                    </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* ADD TASK SECTION */}
+      <div className="flex gap-2 mt-4 items-center flex-wrap">
+        <input
+          type="text"
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
+          onKeyDown={handleEnter}
+          placeholder="Add a new task"
+          className="flex-1 px-4 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-600 min-w-[200px]"
+        />
+
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as Category)}
+          className="px-4 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600"
+        >
+          <option value="academics">📚 Academics</option>
+          <option value="health">🏃 Health</option>
+          <option value="financial">💵 Financial</option>
+          <option value="social">👋 Social</option>
+          <option value="other">📝 Other</option>
+        </select>
+
+        <DatePicker
+          selected={dueDate}
+          onChange={(date) => setDueDate(date)}
+          minDate={new Date()}
+          isClearable
+          placeholderText="Set due date"
+          className="px-3 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600"
+          calendarClassName="bg-gray-900 text-white rounded-lg"
+        />
+
+        {/* Repeat Selector */}
+        <select
+          value={repeat}
+          onChange={(e) => setRepeat(e.target.value as RepeatFrequency)}
+          className="px-3 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600"
+        >
+          <option value="none">No repeat</option>
+          <option value="weekly">Weekly 🔄</option>
+          <option value="monthly">Monthly 🔄</option>
+          <option value="yearly">Yearly 🔄</option>
+        </select>
+
+        <button
+          onClick={addTodo}
+          className="px-5 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-300 transition-colors"
+        >
+          Add
+        </button>
       </div>
-    )}
-
-    {/* ADD TASK SECTION - NOW BELOW COMPLETED TASKS */}
-    <div className="flex gap-2 mt-4 items-center flex-wrap">
-      <input
-        type="text"
-        value={newTodo}
-        onChange={(e) => setNewTodo(e.target.value)}
-        onKeyDown={handleEnter}
-        placeholder="Add a new task"
-        className="flex-1 px-4 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-700 focus:outline-none focus:ring-1 focus:ring-neutral-600 min-w-[200px]"
-      />
-
-      <select
-        value={category}
-        onChange={(e) => setCategory(e.target.value as Category)}
-        className="px-4 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600"
-      >
-        <option value="academics">📚 Academics</option>
-        <option value="health">🏃 Health</option>
-        <option value="financial">💵 Financial</option>
-        <option value="social">👋 Social</option>
-        <option value="other">📝 Other</option>
-      </select>
-
-      <DatePicker
-        selected={dueDate}
-        onChange={(date) => setDueDate(date)}
-        minDate={new Date()}
-        isClearable
-        placeholderText="Set due date"
-        className="px-3 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600"
-        calendarClassName="bg-gray-900 text-white rounded-lg"
-      />
-
-      {/* Repeat Selector */}
-      <select
-        value={repeat}
-        onChange={(e) => setRepeat(e.target.value as RepeatFrequency)}
-        className="px-3 py-3 rounded-lg bg-neutral-800 text-white border border-neutral-600 focus:outline-none focus:ring-1 focus:ring-neutral-600"
-      >
-        <option value="none">No repeat</option>
-        <option value="weekly">Weekly 🔄</option>
-        <option value="monthly">Monthly 🔄</option>
-        <option value="yearly">Yearly 🔄</option>
-      </select>
-
-      <button
-        onClick={addTodo}
-        className="px-5 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-300 transition-colors"
-      >
-        Add
-      </button>
     </div>
-  </div>
-);
+  );
 }
