@@ -177,7 +177,7 @@ export function SortableItem({ todo, toggle, onComplete }: SortableItemProps) {
       >
         {/* Left side: Drag handle + Checkbox + Category */}
         <div className="flex items-center shrink-0">
-          <DragHandle listeners={listeners} attributes={attributes} />
+          <DragHandle listeners={listeners ?? {}} attributes={attributes} />
           
           <button
             onPointerDown={(e) => e.stopPropagation()}
