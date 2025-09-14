@@ -149,14 +149,12 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
   }, [todos, hasHydrated]);
 
   const addTodo = (todo: Omit<Todo, 'id' | 'createdAt' | 'originalDueDate'>) => {
-  const newTodo: Todo = {
-    ...todo,
-    id: newId(),
-    createdAt: new Date(),
-    originalDueDate: todo.dueDate ?? undefined, // only use dueDate here
-  };
-  setTodos(prev => [...prev, newTodo]);
-};
+    const newTodo: Todo = {
+      ...todo,
+      id: newId(),
+      createdAt: new Date(),
+      originalDueDate: todo.dueDate ?? undefined, // only use dueDate here
+    };
     setTodos(prev => [...prev, newTodo]);
   };
 
@@ -165,7 +163,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
       prev.map(todo => {
         if (todo.id === id) {
           const newCompletedState = !todo.completed;
-          
+
           if (newCompletedState && todo.repeat !== 'none') {
             // Create a new recurring task
             const newDueDate = calculateNextDueDate(todo.dueDate, todo.repeat);
@@ -178,14 +176,14 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
               createdAt: new Date(),
               originalDueDate: todo.originalDueDate ?? todo.dueDate ?? undefined,
             };
-            
+
             // Return both the completed task and the new recurring task
             return [
               { ...todo, completed: newCompletedState, completedAt: newCompletedState ? new Date() : undefined },
               newTask
             ];
           }
-          
+
           return {
             ...todo,
             completed: newCompletedState,
@@ -193,7 +191,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
           };
         }
         return todo;
-      }).flat() // Flatten the array in case we added new tasks
+      }).flat()
     );
   };
 
