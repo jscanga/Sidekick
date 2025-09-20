@@ -1,0 +1,302 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ===== CUSTOM ANIMATIONS ===== */
+@keyframes pulse-yellow {
+  0%, 100% { background-color: rgba(250, 204, 21, 0.2); }
+  50% { background-color: rgba(250, 204, 21, 0.35); }
+}
+
+@keyframes pulse-lightgreen {
+  0%, 100% { background-color: rgba(134, 239, 172, 0.2); }
+  50% { background-color: rgba(134, 239, 172, 0.35); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { background-color: rgba(220, 38, 38, 0.2); }
+  50% { background-color: rgba(220, 38, 38, 0.35); }
+}
+@keyframes pulse-blue {
+  0%, 100% { background-color: rgba(59, 130, 246, 0.3); }
+  50% { background-color: rgba(59, 130, 246, 0.45); }
+}
+
+@keyframes pulse-green {
+  0%, 100% { background-color: rgba(34, 197, 94, 0.3); }
+  50% { background-color: rgba(34, 197, 94, 0.45); }
+}
+
+@keyframes pulse-purple {
+  0%, 100% { background-color: rgba(168, 85, 247, 0.3); }
+  50% { background-color: rgba(168, 85, 247, 0.45); }
+}
+
+@keyframes pulse-teal {
+  0%, 100% { background-color: rgba(20, 184, 166, 0.3); }
+  50% { background-color: rgba(20, 184, 166, 0.45); }
+}
+
+@keyframes pulse-orange {
+  0%, 100% { background-color: rgba(249, 115, 22, 0.3); }
+  50% { background-color: rgba(249, 115, 22, 0.45); }
+}
+.animate-pulse-red {
+  animation: pulse-red 2s infinite;
+}
+
+.animate-pulse-yellow {
+  animation: pulse-yellow 2s infinite;
+}
+
+.animate-pulse-lightgreen {
+  animation: pulse-lightgreen 2s infinite;
+}
+.animate-pulse-blue {
+  animation: pulse-blue 3s infinite;
+}
+
+.animate-pulse-green {
+  animation: pulse-green 3s infinite;
+}
+
+.animate-pulse-purple {
+  animation: pulse-purple 3s infinite;
+}
+
+.animate-pulse-teal {
+  animation: pulse-teal 3s infinite;
+}
+
+.animate-pulse-orange {
+  animation: pulse-orange 3s infinite;
+}
+/* ===== REACT DATEPICKER STYLES ===== */
+/* Calendar Container */
+.react-datepicker {
+  background-color: rgb(23 23 23) !important; /* neutral-900 */
+  border: 1px solid rgb(64 64 64) !important; /* neutral-700 */
+  border-radius: 0.5rem;
+  color: white;
+  font-family: inherit;
+}
+
+/* Calendar Header */
+.react-datepicker__header {
+  background-color: rgb(38 38 38) !important; /* neutral-800 */
+  border-bottom: 1px solid rgb(64 64 64) !important; /* neutral-700 */
+  padding: 0.5rem 0;
+}
+
+.react-datepicker__current-month {
+  color: white !important;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* Day Names (Su, Mo, Tu, etc) */
+.react-datepicker__day-name {
+  color: rgb(163 163 163) !important; /* neutral-400 */
+  font-weight: 500;
+}
+
+/* ===== DATE STATES ===== */
+/* Regular Days (Future) */
+.react-datepicker__day {
+  color: rgb(245 245 245) !important; /* neutral-100 - white text */
+}
+
+/* PAST DATES - Clearly disabled */
+.react-datepicker__day--outside-month,
+.react-datepicker__day[aria-disabled="true"],
+.react-datepicker__day--disabled {
+  color: rgb(82 82 82) !important; /* neutral-600 - dark gray */
+  cursor: not-allowed !important;
+  text-decoration: line-through;
+}
+
+/* Today's Date */
+.react-datepicker__day--today {
+  font-weight: bold;
+  color: rgb(110 231 183) !important; /* emerald-300 */
+  background-color: rgba(110, 231, 183, 0.1) !important;
+}
+
+/* Hover State (Future dates only) */
+.react-datepicker__day:not(.react-datepicker__day--disabled):hover {
+  background-color: rgba(4, 120, 87, 0.3) !important; /* emerald-700 with opacity */
+  color: white !important;
+}
+
+/* ===== SELECTION STATES (EMERALD) ===== */
+/* Selected Date */
+.react-datepicker__day--selected {
+  background-color: rgb(4 120 87) !important; /* emerald-700 */
+  color: white !important;
+  font-weight: 600;
+}
+
+/* Keyboard Selected */
+.react-datepicker__day--keyboard-selected {
+  background-color: rgb(5 150 105) !important; /* emerald-600 */
+  color: white !important;
+  font-weight: 600;
+}
+
+/* ===== NAVIGATION ===== */
+/* Navigation Arrows */
+.react-datepicker__navigation-icon::before {
+  border-color: rgb(163 163 163) !important; /* neutral-400 */
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: rgb(212 212 212) !important; /* neutral-300 */
+}
+
+.react-datepicker__navigation {
+  color: white !important;
+}
+
+.react-datepicker__navigation:hover {
+  background-color: rgba(4, 120, 87, 0.15) !important;
+}
+
+/* ===== OTHER ELEMENTS ===== */
+/* Week Numbers */
+.react-datepicker__week-number {
+  color: rgb(163 163 163) !important; /* neutral-400 */
+}
+
+/* Time Selection */
+.react-datepicker__time-container {
+  border-left: 1px solid rgb(64 64 64) !important; /* neutral-700 */
+}
+
+.react-datepicker__time-list-item {
+  color: rgb(245 245 245) !important; /* neutral-100 */
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: rgba(4, 120, 87, 0.2) !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: rgb(4 120 87) !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+/* REPLACE with these styles: */
+.react-datepicker-popper {
+  z-index: 50 !important;
+}
+
+/* Optional: Add some spacing from the input */
+.react-datepicker-popper[data-placement^="bottom"] {
+  margin-top: 8px !important;
+}
+
+.react-datepicker-popper[data-placement^="top"] {
+  margin-bottom: 8px !important;
+}
+
+/* ===== ENSURE HIGH SPECIFICITY ===== */
+.react-datepicker__header .react-datepicker__current-month {
+  color: white !important;
+}
+
+/* Highlight current selection in dropdowns */
+.react-datepicker__year-select option:checked,
+.react-datepicker__month-select option:checked {
+  background-color: rgb(4 120 87) !important;
+  color: white !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time-list-item {
+  background-color: rgb(23 23 23) !important;
+  color: white !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time-list-item:hover {
+  background-color: rgb(38 38 38) !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time-list-item--selected {
+  background-color: rgb(4 120 87) !important;
+  color: white !important;
+}
+
+.react-datepicker__time-container {
+  background-color: rgb(23 23 23) !important; /* neutral-900 */
+  border-left: 1px solid rgb(64 64 64) !important; /* neutral-700 */
+  width: 80px !important;
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  background-color: rgb(23 23 23) !important;
+}
+
+.react-datepicker__time-box {
+  background-color: rgb(23 23 23) !important;
+  width: 100% !important;
+}
+
+.react-datepicker__time-list {
+  background-color: rgb(23 23 23) !important;
+  color: white !important;
+  padding: 0 !important;
+}
+
+.react-datepicker__time-list-item {
+  background-color: rgb(23 23 23) !important;
+  color: white !important;
+  padding: 8px 10px !important;
+  font-size: 0.9rem !important;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: rgb(38 38 38) !important; /* neutral-800 */
+  color: white !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: rgb(4 120 87) !important; /* emerald-700 */
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Time header */
+.react-datepicker__time-container .react-datepicker__header--time {
+  background-color: rgb(38 38 38) !important; /* neutral-800 */
+  color: white !important;
+  border-bottom: 1px solid rgb(64 64 64) !important;
+  padding: 8px 0 !important;
+  font-weight: 500 !important;
+}
+
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
