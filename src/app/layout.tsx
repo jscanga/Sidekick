@@ -8,8 +8,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "chord site",
+  title: "chord's website",
   description: "lock in",
+  keywords: "James Scanga"
 };
 
 export default function RootLayout({
