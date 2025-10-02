@@ -476,12 +476,11 @@ const processCanvasEvent = (eventData: any): Todo | null => {
     text: assignmentName,
     description: description,
     dueDate: dueDate,
-    dueTime: null,
+    dueTime: undefined,
     category: 'academics' as Category,
     completed: false,
     repeat: 'none' as RepeatFrequency,
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   console.log('Created todo:', todo);
