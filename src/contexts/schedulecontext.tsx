@@ -12,6 +12,12 @@ interface ClassItem {
   startTime: string;
   endTime: string;
   location: string;
+  canvasLink: string;
+  notesLink: string;
+  midtermDate: string;
+  finalDate: string;
+  mapLocation?: string;
+  classType: string;
   color: string;
 }
 
