@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Layout from "@/components/Layout";
-import { User, GraduationCap, Trash2, Save, AlertTriangle, Key, Download, Bomb, Shield, Database } from 'lucide-react';
+import { User, GraduationCap, Trash2, Save, AlertTriangle, Key, Download, Bomb, Shield, Database, CheckCircle } from 'lucide-react';
 
 interface UserProfile {
   name: string;
