@@ -9,7 +9,7 @@ import { format, differenceInCalendarDays, startOfDay, isSameDay, addDays } from
 import { useRef } from 'react';
 import { useSchedule } from "@/contexts/schedulecontext";
 import { colorOptions } from '@/lib/colors';
-
+type ColorValue = string;
 // Define proper TypeScript interfaces
 interface ClassItem {
   id: number;
@@ -25,7 +25,7 @@ interface ClassItem {
   finalDate: string;
   mapLocation?: string;
   classType: string;
-  color: string;
+  color: ColorValue;
 }
 
 interface Todo {
@@ -307,15 +307,23 @@ const Schedule = () => {
   };
 
   // Class form state
-const [newClass, setNewClass] = useState({
+const [newClass, setNewClass] = useState<{
+  name: string;
+  instructor: string;
+  days: string[];
+  startTime: string;
+  endTime: string;
+  location: string;
+  color: ColorValue;
+}>({
   name: '',
   instructor: '',
-  days: [] as string[],
+  days: [],
   startTime: '09:00',
   endTime: '10:00',
   location: '',
-  color: colorOptions[0].value
-  });
+  color: colorOptions[0].value as ColorValue
+});
 
   // Get days of the week
   const getDays = () => {
@@ -471,15 +479,15 @@ const handleAddClass = () => {
   
   setClasses([...classes, newClassItem]);
   setShowAddClassModal(false);
-  setNewClass({
-    name: '',
-    instructor: '',
-    days: [],
-    startTime: '09:00',
-    endTime: '10:00',
-    location: '',
-    color: colorOptions[0].value
-  });
+setNewClass({
+  name: '',
+  instructor: '',
+  days: [],
+  startTime: '09:00',
+  endTime: '10:00',
+  location: '',
+  color: colorOptions[0].value as ColorValue
+});
 };
 
   // Handle updating a class
