@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSchedule } from "@/contexts/schedulecontext";
 import DatePicker from "react-datepicker";
@@ -44,7 +44,7 @@ interface WhiteboardNodeProps {
   node: WhiteboardNode;
   todos: Todo[];
   toggleTodo: (id: string) => void;
-  whiteboardRef: React.RefObject<HTMLDivElement>;
+  whiteboardRef: RefObject<HTMLDivElement | null>;
   setNodes: React.Dispatch<React.SetStateAction<WhiteboardNode[]>>;
   onDragStart: (nodeId: string) => void;
   onDragEnd: () => void;
