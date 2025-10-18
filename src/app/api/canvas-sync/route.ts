@@ -1,5 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Define interfaces for Canvas API responses
+interface CanvasCourse {
+  id: number;
+  name: string;
+  course_code?: string;
+}
+
+interface CanvasAssignment {
+  id: number;
+  name: string;
+  due_at: string | null;
+  course_name?: string;
+  course_id?: number;
+  completed?: boolean;
+  submission_status?: string;
+}
+
+interface CanvasEnrollment {
+  type: string;
+  enrollment_state: string;
+  grades?: {
+    current_grade: string | null;
+    current_score: number | null;
+    final_grade: string | null;
+    final_score: number | null;
+    grading_scale?: string;
+  };
+}
+
+interface CanvasSubmission {
+  workflow_state: string;
+}
+
+interface GradeInfo {
+  currentGrade: string | null;
+  currentScore: number | null;
+  finalGrade: string | null;
+  finalScore: number | null;
+  gradeScale: string;
+}
+
+interface CourseGrade {
+  course_id: number;
+  course_name: string;
+  currentGrade: string | null;
+  currentScore: number | null;
+  finalGrade: string | null;
+  finalScore: number | null;
+  gradeScale: string;
+}
+
+interface ResponseData {
+  assignments: CanvasAssignment[];
+  success: boolean;
+  grades?: CourseGrade[];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { canvasUrl, canvasApiKey, includeGrades = false } = await request.json();
@@ -23,8 +80,8 @@ export async function POST(request: NextRequest) {
     const courses = await fetchEnrolledCourses(apiUrl, canvasApiKey);
     console.log(`Found ${courses.length} courses`);
     
-    let allAssignments: any[] = [];
-    let courseGrades: any[] = [];
+    const allAssignments: CanvasAssignment[] = [];
+    const courseGrades: CourseGrade[] = [];
     
     for (const course of courses) {
       try {
@@ -34,7 +91,7 @@ export async function POST(request: NextRequest) {
         
         const assignmentsWithStatus = await checkAssignmentSubmissions(apiUrl, canvasApiKey, course.id, courseAssignments);
         
-        allAssignments = allAssignments.concat(assignmentsWithStatus.map((assignment: any) => ({
+        allAssignments.push(...assignmentsWithStatus.map((assignment: CanvasAssignment) => ({
           ...assignment,
           course_name: course.name,
           course_id: course.id
@@ -63,7 +120,7 @@ export async function POST(request: NextRequest) {
     console.log('Incomplete assignments:', incompleteAssignments.length);
     
     // Return both assignments and grades
-    const responseData: any = {
+    const responseData: ResponseData = {
       assignments: incompleteAssignments,
       success: true
     };
@@ -96,7 +153,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-async function fetchCourseGrades(apiUrl: string, apiKey: string, courseId: number): Promise<any> {
+
+async function fetchCourseGrades(apiUrl: string, apiKey: string, courseId: number): Promise<GradeInfo | null> {
   const gradesUrl = `${apiUrl}/api/v1/courses/${courseId}/enrollments?` + 
     `per_page=100&` +
     `type[]=StudentEnrollment`;
@@ -115,23 +173,24 @@ async function fetchCourseGrades(apiUrl: string, apiKey: string, courseId: numbe
     return null;
   }
 
-  const enrollments = await response.json();
+  const enrollments: CanvasEnrollment[] = await response.json();
   
   // Find the student's enrollment
-  const studentEnrollment = enrollments.find((enrollment: any) => 
+  const studentEnrollment = enrollments.find((enrollment: CanvasEnrollment) => 
     enrollment.type === 'StudentEnrollment' && enrollment.enrollment_state === 'active'
   );
   
   return studentEnrollment ? {
-    currentGrade: studentEnrollment.grades?.current_grade,
-    currentScore: studentEnrollment.grades?.current_score,
-    finalGrade: studentEnrollment.grades?.final_grade,
-    finalScore: studentEnrollment.grades?.final_score,
+    currentGrade: studentEnrollment.grades?.current_grade || null,
+    currentScore: studentEnrollment.grades?.current_score || null,
+    finalGrade: studentEnrollment.grades?.final_grade || null,
+    finalScore: studentEnrollment.grades?.final_score || null,
     gradeScale: studentEnrollment.grades?.grading_scale || 'Percentage'
   } : null;
 }
+
 // Fetch all enrolled courses
-async function fetchEnrolledCourses(apiUrl: string, apiKey: string): Promise<any[]> {
+async function fetchEnrolledCourses(apiUrl: string, apiKey: string): Promise<CanvasCourse[]> {
   const coursesUrl = `${apiUrl}/api/v1/courses?enrollment_state=active&per_page=100`;
   console.log('Fetching courses from:', coursesUrl);
   
@@ -146,13 +205,13 @@ async function fetchEnrolledCourses(apiUrl: string, apiKey: string): Promise<any
     throw new Error(`Failed to fetch courses: ${response.status}`);
   }
 
-  const courses = await response.json();
+  const courses: CanvasCourse[] = await response.json();
   // Filter out courses without a name (sometimes Canvas returns empty course objects)
-  return courses.filter((course: any) => course.name && course.id);
+  return courses.filter((course: CanvasCourse) => course.name && course.id);
 }
 
 // Fetch assignments for a specific course
-async function fetchCourseAssignments(apiUrl: string, apiKey: string, courseId: number): Promise<any[]> {
+async function fetchCourseAssignments(apiUrl: string, apiKey: string, courseId: number): Promise<CanvasAssignment[]> {
   const assignmentsUrl = `${apiUrl}/api/v1/courses/${courseId}/assignments?` + 
     `per_page=100&` + // Get more results per page
     `order_by=due_at`; // Order by due date
@@ -171,13 +230,13 @@ async function fetchCourseAssignments(apiUrl: string, apiKey: string, courseId: 
     return [];
   }
 
-  const assignments = await response.json();
+  const assignments: CanvasAssignment[] = await response.json();
   return assignments;
 }
 
 // Check submission status for assignments
-async function checkAssignmentSubmissions(apiUrl: string, apiKey: string, courseId: number, assignments: any[]): Promise<any[]> {
-  const assignmentsWithStatus = [];
+async function checkAssignmentSubmissions(apiUrl: string, apiKey: string, courseId: number, assignments: CanvasAssignment[]): Promise<CanvasAssignment[]> {
+  const assignmentsWithStatus: CanvasAssignment[] = [];
   
   for (const assignment of assignments) {
     try {
@@ -191,7 +250,7 @@ async function checkAssignmentSubmissions(apiUrl: string, apiKey: string, course
       });
       
       if (response.ok) {
-        const submission = await response.json();
+        const submission: CanvasSubmission = await response.json();
         // Mark as completed if submitted (workflow_state can be 'submitted', 'graded', 'pending_review')
         const isCompleted = submission.workflow_state !== 'unsubmitted' && submission.workflow_state !== null;
         
@@ -229,14 +288,14 @@ async function checkAssignmentSubmissions(apiUrl: string, apiKey: string, course
   return assignmentsWithStatus;
 }
 
-function convertAssignmentsToICS(assignments: any[]): string {
-  let icsContent = [
+function convertAssignmentsToICS(assignments: CanvasAssignment[]): string {
+  const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Canvas Todo Sync//EN',
   ];
 
-  assignments.forEach((assignment) => {
+  assignments.forEach((assignment: CanvasAssignment) => {
     const dueDate = assignment.due_at;
     const assignmentName = assignment.name || 'Canvas Assignment';
     const courseName = assignment.course_name || 'Canvas Course';
