@@ -1,7 +1,65 @@
 // app/api/canvas/calculated-grades/route.ts
-// Replace the entire file with this fixed version:
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Define interfaces for Canvas API responses
+interface CanvasCourse {
+  id: number;
+  name: string;
+  course_code: string;
+  total_scores?: {
+    current_score: number | null;
+    final_score: number | null;
+    current_points: number | null;
+    final_points: number | null;
+  };
+}
+
+interface CanvasEnrollment {
+  type: string;
+  grades?: {
+    current_score: number | null;
+    current_grade: string | null;
+    current_points: number | null;
+    final_points: number | null;
+  };
+}
+
+interface CanvasAssignment {
+  points_possible: number;
+  submission?: {
+    workflow_state: string;
+  };
+}
+
+interface GradeInfo {
+  course_id: number;
+  course_name: string;
+  course_code: string;
+  calculatedGrade: string | null;
+  calculatedScore: number | null;
+  totalPoints?: number | null;
+  earnedPoints?: number | null;
+  dataSource?: string;
+  error?: string;
+  debug?: DebugInfo;
+}
+
+interface DebugInfo {
+  steps: string[];
+  enrollmentsStatus?: number;
+  enrollmentsFound?: number;
+  studentEnrollment?: boolean;
+  gradesFromEnrollments?: unknown;
+  enrollmentsError?: string;
+  assignmentsStatus?: number;
+  assignmentsFound?: number;
+  assignmentsWithPoints?: number;
+  gradedAssignments?: number;
+  assignmentsError?: string;
+  totalScores?: unknown;
+  finalResult?: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,17 +97,17 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to fetch courses: ${coursesResponse.status}`);
     }
 
-    const courses = await coursesResponse.json();
-    const validCourses = courses.filter((course: any) => course.name && course.id);
+    const courses: CanvasCourse[] = await coursesResponse.json();
+    const validCourses = courses.filter((course: CanvasCourse) => course.name && course.id);
     
-    console.log(`Found ${validCourses.length} valid courses:`, validCourses.map((c: any) => ({
+    console.log(`Found ${validCourses.length} valid courses:`, validCourses.map((c: CanvasCourse) => ({
       id: c.id,
       name: c.name,
       code: c.course_code,
       has_total_scores: !!c.total_scores
     })));
 
-    const calculatedGrades = [];
+    const calculatedGrades: GradeInfo[] = [];
     
     for (const course of validCourses) {
       try {
@@ -100,8 +158,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function debugCourseGrade(apiUrl: string, apiKey: string, course: any) {
-  const debugInfo: any = { steps: [] };
+async function debugCourseGrade(apiUrl: string, apiKey: string, course: CanvasCourse): Promise<GradeInfo> {
+  const debugInfo: DebugInfo = { steps: [] };
   
   // Step 1: Check enrollments for grades
   debugInfo.steps.push('Checking enrollments');
@@ -119,8 +177,8 @@ async function debugCourseGrade(apiUrl: string, apiKey: string, course: any) {
     debugInfo.enrollmentsStatus = enrollmentsResponse.status;
     
     if (enrollmentsResponse.ok) {
-      const enrollments = await enrollmentsResponse.json();
-      const studentEnrollment = enrollments.find((e: any) => e.type === 'StudentEnrollment');
+      const enrollments: CanvasEnrollment[] = await enrollmentsResponse.json();
+      const studentEnrollment = enrollments.find((e: CanvasEnrollment) => e.type === 'StudentEnrollment');
       
       debugInfo.enrollmentsFound = enrollments.length;
       debugInfo.studentEnrollment = !!studentEnrollment;
@@ -165,14 +223,14 @@ async function debugCourseGrade(apiUrl: string, apiKey: string, course: any) {
     debugInfo.assignmentsStatus = assignmentsResponse.status;
     
     if (assignmentsResponse.ok) {
-      const assignments = await assignmentsResponse.json();
+      const assignments: CanvasAssignment[] = await assignmentsResponse.json();
       debugInfo.assignmentsFound = assignments.length;
-      debugInfo.assignmentsWithPoints = assignments.filter((a: any) => a.points_possible > 0).length;
+      debugInfo.assignmentsWithPoints = assignments.filter((a: CanvasAssignment) => a.points_possible > 0).length;
       
       console.log(`Found ${assignments.length} assignments, ${debugInfo.assignmentsWithPoints} with points`);
       
       // Check if any assignments are graded
-      const gradedAssignments = assignments.filter((a: any) => 
+      const gradedAssignments = assignments.filter((a: CanvasAssignment) => 
         a.submission && a.submission.workflow_state === 'graded'
       );
       debugInfo.gradedAssignments = gradedAssignments.length;
