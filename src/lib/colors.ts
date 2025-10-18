@@ -4,7 +4,7 @@ export const getWhiteboardColor = (colorValue: string): string => {
   console.log('Processing color:', colorValue);
   
   // Simple replacement approach - replace /30 with /90 and /60 with /80
-  let processed = colorValue
+  const processed = colorValue
     .replace(/\/30/g, '/90')
     .replace(/\/60/g, '/80');
   
