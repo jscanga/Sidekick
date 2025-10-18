@@ -712,8 +712,8 @@ const Classes = () => {
     const classItem: ClassItem = {
       id: Date.now() + Math.random(),
       name: eventData.name || 'Imported Class',
-      instructor: extractInstructor(eventData.description) || 'Instructor',
-      days: getDaysFromRRule(eventData.rrule) || getDaysFromDate(eventData.start) || ['Mon', 'Wed', 'Fri'],
+      instructor: extractInstructor(eventData.description || '') || 'Instructor',
+      days: getDaysFromRRule(eventData.rrule || '') || getDaysFromDate(eventData.start || '') || ['Mon', 'Wed', 'Fri'],
       startTime: formatICSTime(eventData.start),
       endTime: formatICSTime(eventData.end),
       location: eventData.location || 'TBA',
@@ -821,7 +821,7 @@ const Classes = () => {
         const icsData = e.target?.result as string;
         console.log('Raw ICS data (first 200 chars):', icsData.substring(0, 200));
         
-        const newClasses = parseICSData(icsData);
+        const newClasses = parseICSData(icsData) as ClassItem[];
         console.log('Parsed classes:', newClasses);
         
         if (newClasses.length === 0) {
