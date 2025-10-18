@@ -52,7 +52,7 @@ export default function EditTodoModal({ todo, isOpen, onClose }: EditTodoModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40">
+<div className="fixed top-0 left-0 w-screen h-screen bg-black/90 flex items-center justify-center z-[9999]">
       <div className="bg-neutral-800 p-6 rounded-lg w-96 max-w-full mx-4">
         <h2 className="text-xl font-bold mb-4">Edit Task</h2>
 

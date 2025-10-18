@@ -9,8 +9,8 @@ export default function TodosPage() {
   return (
     <Layout>
     <div className="flex">
-      <div className="flex-1 p-8">
-        <h1 className="text-5xl font-bold font-mono mb-4"></h1>
+      <div className="flex-1">
+        <h1 className="text-5xl font-bold font-mono mb-0"></h1>
         <ToDoList />
       </div>
     </div>

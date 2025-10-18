@@ -1,3 +1,19 @@
+export const getWhiteboardColor = (colorValue: string): string => {
+  if (!colorValue) return 'from-blue-600/90 to-cyan-500/90 border-blue-500/80';
+  
+  console.log('Processing color:', colorValue);
+  
+  // Simple replacement approach - replace /30 with /90 and /60 with /80
+  let processed = colorValue
+    .replace(/\/30/g, '/90')
+    .replace(/\/60/g, '/80');
+  
+  console.log('Processed color:', processed);
+  
+  return processed;
+};
+
+
 export const colorOptions = [
     { 
       value: 'from-blue-600/30 to-cyan-500/30 border-blue-500/60', 

@@ -26,6 +26,7 @@ export interface Todo {
   completedAt?: Date;
   createdAt: Date;
   originalDueDate?: Date;
+  starred?: boolean; 
 }
 
 export interface TodoStats {
