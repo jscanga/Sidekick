@@ -5,21 +5,12 @@ import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useTodos, Category, RepeatFrequency, Todo } from "@/contexts/todocontext";
-import { startOfDay } from "date-fns";
 
 export interface EditTodoModalProps {
   todo: Todo;
   isOpen: boolean;
   onClose: () => void;
 }
-
-const categoryEmoji: Record<Category, string> = {
-  academics: "📚",
-  health: "🏃",
-  financial: "💵",
-  social: "👋",
-  other: "📝",
-};
 
 export default function EditTodoModal({ todo, isOpen, onClose }: EditTodoModalProps) {
   const { updateTodo } = useTodos();

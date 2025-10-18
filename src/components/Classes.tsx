@@ -1,9 +1,9 @@
 // components/Classes.tsx
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Plus, MapPin, Link, FileText, Calendar, Clock, Edit, Trash2, X, Upload, ExternalLink, Download, Users, Calendar as CalendarIcon, AlertCircle, Download as DownloadIcon, Notebook } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { BookOpen, Plus, MapPin, Link, Calendar, Clock, Trash2, X, ExternalLink, Users, Calendar as CalendarIcon, AlertCircle, Download as DownloadIcon, Notebook } from 'lucide-react';
 import { useSchedule } from "@/contexts/schedulecontext";
 import { useTodos } from "@/contexts/todocontext";
 import { format, differenceInCalendarDays, startOfDay } from 'date-fns';
@@ -70,6 +70,28 @@ interface Todo {
   completed: boolean;
 }
 
+interface CanvasGrade {
+  course_id: string;
+  course_name: string;
+  calculatedGrade: string | null;
+  calculatedScore: number | null;
+  totalPoints: number;
+  earnedPoints: number;
+  assignmentCount: number;
+  gradedAssignmentCount: number;
+  completionPercentage: number;
+  gradingScheme: string;
+}
+
+interface ParsedEvent {
+  name?: string;
+  start?: string;
+  end?: string;
+  location?: string;
+  description?: string;
+  rrule?: string;
+}
+
 const Classes = () => {
   const { classes, setClasses } = useSchedule();
   const { todos } = useTodos();
@@ -81,7 +103,7 @@ const Classes = () => {
   const [showICSImportModal, setShowICSImportModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { updateGrade, getGradeByCourseCode, calculateGPA } = useGradeStorage();
+  const { updateGrade, calculateGPA } = useGradeStorage();
 
   // Enhanced class form state with new fields
   const [newClass, setNewClass] = useState({
@@ -99,9 +121,6 @@ const Classes = () => {
     color: 'from-blue-600 to-cyan-500 border-blue-500'
   });
 
-  // Color options matching your schedule component - Gradient version
-
-
   // Class type options
   const classTypeOptions = [
     { value: 'lecture', label: 'Lecture' },
@@ -111,146 +130,146 @@ const Classes = () => {
     { value: 'workshop', label: 'Workshop' }
   ];
 
-// Replace your syncCanvasGrades function with this improved version
-const syncCanvasGrades = async () => {
-  const userProfile = localStorage.getItem('userProfile');
-  if (!userProfile) {
-    alert('Please set up your Canvas credentials in Settings first.');
-    return;
-  }
-
-  const profile = JSON.parse(userProfile);
-  if (!profile.canvasUrl || !profile.canvasApiKey) {
-    alert('Please set up your Canvas credentials in Settings first.');
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/canvas/calculated-grades', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        canvasUrl: profile.canvasUrl,
-        canvasApiKey: profile.canvasApiKey
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch calculated grades');
+  // Replace your syncCanvasGrades function with this improved version
+  const syncCanvasGrades = async () => {
+    const userProfile = localStorage.getItem('userProfile');
+    if (!userProfile) {
+      alert('Please set up your Canvas credentials in Settings first.');
+      return;
     }
 
-    const data = await response.json();
-    console.log('Grade calculation response:', data); // Debug log
-    
-    if (data.success) {
-      let matchedCount = 0;
-      
-      setClasses(prevClasses => {
-        return prevClasses.map(cls => {
-          // Try multiple matching strategies
-          const courseGrade = data.grades.find((grade: any) => {
-            const classCourseCode = extractCourseCode(cls.name);
-            const gradeCourseCode = extractCourseCode(grade.course_name);
-            
-            // Strategy 1: Exact course code match
-            if (classCourseCode && gradeCourseCode && 
-                classCourseCode.toLowerCase() === gradeCourseCode.toLowerCase()) {
-              console.log(`Matched by course code: ${classCourseCode} = ${gradeCourseCode}`);
-              return true;
-            }
-            
-            // Strategy 2: Course name contains class name or vice versa
-            if (cls.name.toLowerCase().includes(grade.course_name.toLowerCase()) ||
-                grade.course_name.toLowerCase().includes(cls.name.toLowerCase())) {
-              console.log(`Matched by name: ${cls.name} <-> ${grade.course_name}`);
-              return true;
-            }
-            
-            // Strategy 3: Partial name matching
-            const classNameWords = cls.name.toLowerCase().split(/\s+/);
-            const courseNameWords = grade.course_name.toLowerCase().split(/\s+/);
-            const matchingWords = classNameWords.filter(word => 
-              courseNameWords.some((courseWord: string) => courseWord.includes(word) || word.includes(courseWord))
-            );
-            
-            if (matchingWords.length >= 2) { // At least 2 matching words
-              console.log(`Matched by partial name: ${cls.name} <-> ${grade.course_name}`);
-              return true;
-            }
-            
-            return false;
-          });
-          
-          if (courseGrade && courseGrade.calculatedScore !== null) {
-            matchedCount++;
+    const profile = JSON.parse(userProfile);
+    if (!profile.canvasUrl || !profile.canvasApiKey) {
+      alert('Please set up your Canvas credentials in Settings first.');
+      return;
+    }
 
-            updateGrade(courseGrade, {
-              calculatedGrade : courseGrade.calculatedGrade,
-              calculatedScore : courseGrade.calculatedScore,
-            });
-            console.log(`Matched course: ${cls.name} with grade data:`, courseGrade);
-            return {
-              ...cls,
-              gradeInfo: {
-                calculatedGrade: courseGrade.calculatedGrade,
-                calculatedScore: courseGrade.calculatedScore,
-                totalPoints: courseGrade.totalPoints,
-                earnedPoints: courseGrade.earnedPoints,
-                assignmentCount: courseGrade.assignmentCount,
-                gradedAssignmentCount: courseGrade.gradedAssignmentCount,
-                completionPercentage: courseGrade.completionPercentage,
-                gradingScale: courseGrade.gradingScheme,
-                lastSynced: new Date(),
-                gradeStatus: 'calculated',
-                gradeSource: 'calculated'
-              },
-              canvasCourseId: courseGrade.course_id
-            };
-          } else if (courseGrade) {
-            console.log(`Course matched but no grade data: ${cls.name}`, courseGrade);
-          }
-          
-          return cls;
-        });
+    try {
+      const response = await fetch('/api/canvas/calculated-grades', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          canvasUrl: profile.canvasUrl,
+          canvasApiKey: profile.canvasApiKey
+        }),
       });
-            const gpa = calculateGPA();
-      if (gpa) {
-        alert(`Successfully calculated grades for ${matchedCount} courses!\nCurrent Semester GPA: ${gpa}`);
-      } else {
-        alert(`Successfully calculated grades for ${matchedCount} courses!`);
-      }
-      console.log(`Successfully matched ${matchedCount} out of ${data.grades.length} courses`);
-      
-      if (matchedCount === 0) {
-        alert(`Found ${data.grades.length} courses in Canvas but couldn't match them to your classes. Check console for details.`);
-      } else {
-        alert(`Successfully calculated grades for ${matchedCount} courses!`);
-      }
-    }
-  } catch (error) {
-    console.error('Error calculating grades:', error);
-    alert('Failed to calculate grades from Canvas. Please check your credentials and try again.');
-  }
-};
 
-// Improved course code extraction
-const extractCourseCode = (text: string): string => {
-  if (!text) return '';
-  
-  // Match patterns like "CS 0445", "MATH 0220", "BIO 1234"
-  const courseCodePattern = /[A-Z]{2,}\s*\d{3,}[A-Z]?/g;
-  const matches = text.match(courseCodePattern);
-  
-  if (matches && matches.length > 0) {
-    // Normalize the format (remove extra spaces)
-    return matches[0].replace(/\s+/g, ' ').trim();
-  }
-  
-  return '';
-};
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch calculated grades');
+      }
+
+      const data = await response.json();
+      console.log('Grade calculation response:', data); // Debug log
+      
+      if (data.success) {
+        let matchedCount = 0;
+        
+        setClasses(prevClasses => {
+          return prevClasses.map(cls => {
+            // Try multiple matching strategies
+            const courseGrade = data.grades.find((grade: CanvasGrade) => {
+              const classCourseCode = extractCourseCode(cls.name);
+              const gradeCourseCode = extractCourseCode(grade.course_name);
+              
+              // Strategy 1: Exact course code match
+              if (classCourseCode && gradeCourseCode && 
+                  classCourseCode.toLowerCase() === gradeCourseCode.toLowerCase()) {
+                console.log(`Matched by course code: ${classCourseCode} = ${gradeCourseCode}`);
+                return true;
+              }
+              
+              // Strategy 2: Course name contains class name or vice versa
+              if (cls.name.toLowerCase().includes(grade.course_name.toLowerCase()) ||
+                  grade.course_name.toLowerCase().includes(cls.name.toLowerCase())) {
+                console.log(`Matched by name: ${cls.name} <-> ${grade.course_name}`);
+                return true;
+              }
+              
+              // Strategy 3: Partial name matching
+              const classNameWords = cls.name.toLowerCase().split(/\s+/);
+              const courseNameWords = grade.course_name.toLowerCase().split(/\s+/);
+              const matchingWords = classNameWords.filter(word => 
+                courseNameWords.some(courseWord => courseWord.includes(word) || word.includes(courseWord))
+              );
+              
+              if (matchingWords.length >= 2) { // At least 2 matching words
+                console.log(`Matched by partial name: ${cls.name} <-> ${grade.course_name}`);
+                return true;
+              }
+              
+              return false;
+            });
+            
+            if (courseGrade && courseGrade.calculatedScore !== null) {
+              matchedCount++;
+
+              updateGrade(courseGrade, {
+                calculatedGrade : courseGrade.calculatedGrade,
+                calculatedScore : courseGrade.calculatedScore,
+              });
+              console.log(`Matched course: ${cls.name} with grade data:`, courseGrade);
+              return {
+                ...cls,
+                gradeInfo: {
+                  calculatedGrade: courseGrade.calculatedGrade,
+                  calculatedScore: courseGrade.calculatedScore,
+                  totalPoints: courseGrade.totalPoints,
+                  earnedPoints: courseGrade.earnedPoints,
+                  assignmentCount: courseGrade.assignmentCount,
+                  gradedAssignmentCount: courseGrade.gradedAssignmentCount,
+                  completionPercentage: courseGrade.completionPercentage,
+                  gradingScale: courseGrade.gradingScheme,
+                  lastSynced: new Date(),
+                  gradeStatus: 'calculated',
+                  gradeSource: 'calculated'
+                },
+                canvasCourseId: courseGrade.course_id
+              };
+            } else if (courseGrade) {
+              console.log(`Course matched but no grade data: ${cls.name}`, courseGrade);
+            }
+            
+            return cls;
+          });
+        });
+        const gpa = calculateGPA();
+        if (gpa) {
+          alert(`Successfully calculated grades for ${matchedCount} courses!\nCurrent Semester GPA: ${gpa}`);
+        } else {
+          alert(`Successfully calculated grades for ${matchedCount} courses!`);
+        }
+        console.log(`Successfully matched ${matchedCount} out of ${data.grades.length} courses`);
+        
+        if (matchedCount === 0) {
+          alert(`Found ${data.grades.length} courses in Canvas but couldn't match them to your classes. Check console for details.`);
+        } else {
+          alert(`Successfully calculated grades for ${matchedCount} courses!`);
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating grades:', error);
+      alert('Failed to calculate grades from Canvas. Please check your credentials and try again.');
+    }
+  };
+
+  // Improved course code extraction
+  const extractCourseCode = (text: string): string => {
+    if (!text) return '';
+    
+    // Match patterns like "CS 0445", "MATH 0220", "BIO 1234"
+    const courseCodePattern = /[A-Z]{2,}\s*\d{3,}[A-Z]?/g;
+    const matches = text.match(courseCodePattern);
+    
+    if (matches && matches.length > 0) {
+      // Normalize the format (remove extra spaces)
+      return matches[0].replace(/\s+/g, ' ').trim();
+    }
+    
+    return '';
+  };
 
   // Generate Google Maps URL from location
   const generateMapsUrl = (location: string): string => {
@@ -258,110 +277,109 @@ const extractCourseCode = (text: string): string => {
     const encodedLocation = encodeURIComponent(location);
     return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
   };
-const GradeDisplay = ({ gradeInfo }: { gradeInfo: GradeInfo }) => {
-  if (!gradeInfo) return null;
 
-  const hasOfficialGrade = gradeInfo.currentScore !== null && gradeInfo.currentScore !== undefined;
-  const hasCalculatedGrade = gradeInfo.calculatedScore !== null && gradeInfo.calculatedScore !== undefined;
-  
-  if (!hasOfficialGrade && !hasCalculatedGrade) {
-    return (
-      <div className="mt-2 p-2 bg-gray-800/50 rounded text-xs">
-        <div className="text-gray-400">No grade data available yet</div>
-        <div className="text-gray-500 text-xs mt-1">
-          {gradeInfo.assignmentCount ? `${gradeInfo.gradedAssignmentCount}/${gradeInfo.assignmentCount} assignments graded` : 'Sync to calculate grade'}
-        </div>
-      </div>
-    );
-  }
+  const GradeDisplay = ({ gradeInfo }: { gradeInfo: GradeInfo }) => {
+    if (!gradeInfo) return null;
 
-  // Helper function to determine if we should show letter grade or percentage
-  const renderGrade = (grade: string | null | undefined, score: number | null | undefined) => {
-    if (grade) {
+    const hasOfficialGrade = gradeInfo.currentScore !== null && gradeInfo.currentScore !== undefined;
+    const hasCalculatedGrade = gradeInfo.calculatedScore !== null && gradeInfo.calculatedScore !== undefined;
+    
+    if (!hasOfficialGrade && !hasCalculatedGrade) {
       return (
-        <div>
-          <div className="font-bold text-lg text-emerald-400">{grade}</div>
-          {score && (
-            <div className="text-xs opacity-80 mt-1">
-              {score.toFixed(2)}%
-            </div>
-          )}
-        </div>
-      );
-    } else if (score) {
-      return (
-        <div className="font-bold text-lg text-emerald-400">
-          {score.toFixed(2)}%
+        <div className="mt-2 p-2 bg-gray-800/50 rounded text-xs">
+          <div className="text-gray-400">No grade data available yet</div>
+          <div className="text-gray-500 text-xs mt-1">
+            {gradeInfo.assignmentCount ? `${gradeInfo.gradedAssignmentCount}/${gradeInfo.assignmentCount} assignments graded` : 'Sync to calculate grade'}
+          </div>
         </div>
       );
     }
-    return null;
+
+    // Helper function to determine if we should show letter grade or percentage
+    const renderGrade = (grade: string | null | undefined, score: number | null | undefined) => {
+      if (grade) {
+        return (
+          <div>
+            <div className="font-bold text-lg text-emerald-400">{grade}</div>
+            {score && (
+              <div className="text-xs opacity-80 mt-1">
+                {score.toFixed(2)}%
+              </div>
+            )}
+          </div>
+        );
+      } else if (score) {
+        return (
+          <div className="font-bold text-lg text-emerald-400">
+            {score.toFixed(2)}%
+          </div>
+        );
+      }
+      return null;
+    };
+
+    return (
+      <div className="mt-0 p-2 bg-black/20 rounded">
+        {/* Official Grade (if available) */}
+        {hasOfficialGrade && (
+          <div className="mb-2 pb-2 border-b border-gray-600">
+            <div className="flex justify-between items-center">
+              <span className="text-green-400 text-sm">Official Grade:</span>
+              <div className="text-right">
+                {renderGrade(gradeInfo.currentGrade, gradeInfo.currentScore)}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Calculated Grade */}
+        {hasCalculatedGrade && (
+          <div>
+            <div className="flex justify-between items-center">
+              <span className={hasOfficialGrade ? "text-yellow-400 text-sm" : "text-green-400 text-sm"}>
+                {hasOfficialGrade ? "Calculated Estimate:" : "Current Grade:"}
+              </span>
+              <div className="text-right">
+                {renderGrade(gradeInfo.calculatedGrade, gradeInfo.calculatedScore)}
+              </div>
+            </div>
+            
+            {/* Progress bar */}
+            {gradeInfo.assignmentCount && gradeInfo.assignmentCount > 0 && (
+              <div className="mt-2">
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Assignments Graded</span>
+                  <span>{gradeInfo.gradedAssignmentCount}/{gradeInfo.assignmentCount} ({gradeInfo.completionPercentage?.toFixed(0)}%)</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${gradeInfo.completionPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {/* Points breakdown */}
+            {gradeInfo.totalPoints && gradeInfo.totalPoints > 0 && (
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>Points:</span>
+                <span>{gradeInfo.earnedPoints?.toFixed(1)}/{gradeInfo.totalPoints.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Last synced */}
+        {gradeInfo.lastSynced && (
+          <div className="text-xs text-gray-500 mt-2">
+            Updated: {format(new Date(gradeInfo.lastSynced), "MMM d, h:mm a")}
+          </div>
+        )}
+      </div>
+    );
   };
 
-  return (
-    <div className="mt-0 p-2 bg-black/20 rounded">
-      {/* Official Grade (if available) */}
-      {hasOfficialGrade && (
-        <div className="mb-2 pb-2 border-b border-gray-600">
-          <div className="flex justify-between items-center">
-            <span className="text-green-400 text-sm">Official Grade:</span>
-            <div className="text-right">
-              {renderGrade(gradeInfo.currentGrade, gradeInfo.currentScore)}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Calculated Grade */}
-      {hasCalculatedGrade && (
-        <div>
-          <div className="flex justify-between items-center">
-            <span className={hasOfficialGrade ? "text-yellow-400 text-sm" : "text-green-400 text-sm"}>
-              {hasOfficialGrade ? "Calculated Estimate:" : "Current Grade:"}
-                    {gradeInfo.lastSynced && (
-        <div className="text-xs text-gray-500 mt-2">
-          Updated: {format(new Date(gradeInfo.lastSynced), "MMM d, h:mm a")}
-        </div>
-      )}
-            </span>
-            
-            <div className="text-right">
-              {renderGrade(gradeInfo.calculatedGrade, gradeInfo.calculatedScore)}
-              
-            </div>
-          </div>
-          
-          {/* Progress bar */}
-          {gradeInfo.assignmentCount && gradeInfo.assignmentCount > 0 && (
-            <div className="mt-2">
-              <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>Assignments Graded</span>
-                <span>{gradeInfo.gradedAssignmentCount}/{gradeInfo.assignmentCount} ({gradeInfo.completionPercentage?.toFixed(0)}%)</span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${gradeInfo.completionPercentage}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-          
-          {/* Points breakdown */}
-          {gradeInfo.totalPoints && gradeInfo.totalPoints > 0 && (
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>Points:</span>
-              <span>{gradeInfo.earnedPoints?.toFixed(1)}/{gradeInfo.totalPoints.toFixed(1)}</span>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Last synced */}
-
-    </div>
-  );
-};
   // Get assignments for a specific class - Fixed TypeScript issue
   const getAssignmentsForClass = (className: string): Todo[] => {
     const courseCode = extractCourseCode(className);
@@ -436,7 +454,6 @@ const GradeDisplay = ({ gradeInfo }: { gradeInfo: GradeInfo }) => {
     
     return acc;
   }, []);
-// Add these functions to your classes.tsx component
 
   // Handle adding a new class
   const handleAddClass = () => {
@@ -596,22 +613,29 @@ const GradeDisplay = ({ gradeInfo }: { gradeInfo: GradeInfo }) => {
     
     const files = e.dataTransfer.files;
     if (files.length > 0 && files[0].name.endsWith('.ics')) {
-      const event = { target: { files } };
-      handleICSImport(event as any);
+      // Create a proper change event-like object
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.files = files;
+      
+      const syntheticEvent = {
+        target: fileInput
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      
+      handleICSImport(syntheticEvent);
     }
   };
 
-  // Keep all the existing ICS import functions from previous version
   const parseICSData = (icsData: string) => {
     try {
       console.log("=== Parsing ICS Data ===");
-      const events: any[] = [];
+      const events: ParsedEvent[] = [];
       const lines = icsData.split(/\r?\n/);
-      let currentEvent: any = null;
+      let currentEvent: ParsedEvent | null = null;
       let inEvent = false;
       
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].trim();
+        const line = lines[i].trim();
         if (!line) continue;
         
         if (line.startsWith(' ') && currentEvent) {
@@ -674,7 +698,7 @@ const GradeDisplay = ({ gradeInfo }: { gradeInfo: GradeInfo }) => {
     }
   };
 
-  const processEvent = (eventData: any) => {
+  const processEvent = (eventData: ParsedEvent) => {
     if (!eventData.start || !eventData.end) {
       console.log('Skipping event - missing start or end time:', eventData);
       return null;
@@ -924,100 +948,102 @@ const GradeDisplay = ({ gradeInfo }: { gradeInfo: GradeInfo }) => {
             const finalInfo = formatExamDate(group.mainClass.finalDate);
             const hasUpcomingExams = midtermInfo?.urgency === 'high' || finalInfo?.urgency === 'high';
 
-return (
-  <motion.div
-    key={group.baseName}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className={`bg-gradient-to-r ${group.mainClass?.color || 'from-blue-600 to-cyan-500'} border border-blue-500 rounded-lg p-5 hover:shadow-lg transition-all relative flex flex-col h-full ${
-      (hasUrgentAssignments || hasUpcomingExams) ? 'ring-2 ring-red-500/50' : ''
-    }`}
-  >
-    {(hasUrgentAssignments || hasUpcomingExams) && (
-      <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1">
-        <AlertCircle size={16} className="text-white" />
-      </div>
-    )}
-    
-    {/* Content that can grow/shrink */}
-    <div className="flex-1">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-bold text-lg truncate">{group.baseName}</h3>
-        <div className="flex items-center space-x-2">
-          {group.variations.length > 1 && (
-            <span className="text-xs bg-neutral-700 px-2 py-1 rounded-full">
-              {group.variations.length} variations
-            </span>
-          )}
-          <div className={`w-3 h-3 rounded-full ${colorOptions.find(c => c.value === (group.mainClass?.color || 'from-blue-600 to-cyan-500 border-blue-500'))?.preview || 'bg-gray-500'}`} />
-        </div>
-      </div>
-      
-      <p className="text-gray-300 text-sm mb-3">{getSafeInstructor(group.mainClass)}</p>
-      
-      <div className="space-y-2 text-sm text-gray-400 mb-4">
-        {renderClassVariations(group.variations)}
-        
-        <div className="flex items-center">
-          <MapPin size={14} className="mr-2" />
-          <span className="truncate">{group.mainClass?.location || 'No location set'}</span>
-        </div>
-        
-        {/* Exam Dates */}
-        {(group.mainClass.midtermDate || group.mainClass.finalDate) && (
-          <div className="pt-2">
-            {group.mainClass.midtermDate && (
-              <div className="flex items-center text-xs">
-                <Calendar size={12} className="mr-2" />
-                <span>Midterm: {format(new Date(group.mainClass.midtermDate), "MMM d")}</span>
-              </div>
-            )}
-            {group.mainClass.finalDate && (
-              <div className="flex items-center text-xs mt-1">
-                <Calendar size={12} className="mr-2" />
-                <span>Final: {format(new Date(group.mainClass.finalDate), "MMM d")}</span>
-              </div>
-            )}
-          </div>
-        )}
-        
-        <div className="flex items-center space-x-2 pt-1">
-          {group.mainClass?.canvasLink && (
-            <Link size={14} className="text-blue-400" />
-          )}
-          {group.mainClass?.notesLink && (
-            <Notebook size={14} className="text-green-400" />
-          )}
-        </div>
-      </div>
+            return (
+              <motion.div
+                key={group.baseName}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`bg-gradient-to-r ${group.mainClass?.color || 'from-blue-600 to-cyan-500'} border border-blue-500 rounded-lg p-5 hover:shadow-lg transition-all relative flex flex-col h-full ${
+                  (hasUrgentAssignments || hasUpcomingExams) ? 'ring-2 ring-red-500/50' : ''
+                }`}
+              >
+                {(hasUrgentAssignments || hasUpcomingExams) && (
+                  <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1">
+                    <AlertCircle size={16} className="text-white" />
+                  </div>
+                )}
+                
+                {/* Content that can grow/shrink */}
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-lg truncate">{group.baseName}</h3>
+                    <div className="flex items-center space-x-2">
+                      {group.variations.length > 1 && (
+                        <span className="text-xs bg-neutral-700 px-2 py-1 rounded-full">
+                          {group.variations.length} variations
+                        </span>
+                      )}
+                      <div className={`w-3 h-3 rounded-full ${colorOptions.find(c => c.value === (group.mainClass?.color || 'from-blue-600 to-cyan-500 border-blue-500'))?.preview || 'bg-gray-500'}`} />
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-sm mb-3">{getSafeInstructor(group.mainClass)}</p>
+                  
+                  <div className="space-y-2 text-sm text-gray-400 mb-4">
+                    {renderClassVariations(group.variations)}
+                    
+                    <div className="flex items-center">
+                      <MapPin size={14} className="mr-2" />
+                      <span className="truncate">{group.mainClass?.location || 'No location set'}</span>
+                    </div>
+                    
+                    {/* Exam Dates */}
+                    {(group.mainClass.midtermDate || group.mainClass.finalDate) && (
+                      <div className="pt-2">
+                        {group.mainClass.midtermDate && (
+                          <div className="flex items-center text-xs">
+                            <Calendar size={12} className="mr-2" />
+                            <span>Midterm: {format(new Date(group.mainClass.midtermDate), "MMM d")}</span>
+                          </div>
+                        )}
+                        {group.mainClass.finalDate && (
+                          <div className="flex items-center text-xs mt-1">
+                            <Calendar size={12} className="mr-2" />
+                            <span>Final: {format(new Date(group.mainClass.finalDate), "MMM d")}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center space-x-2 pt-1">
+                      {group.mainClass?.canvasLink && (
+                        <Link size={14} className="text-blue-400" />
+                      )}
+                      {group.mainClass?.notesLink && (
+                        <Notebook size={14} className="text-green-400" />
+                      )}
+                    </div>
+                  </div>
 
-      {/* Upcoming Assignments Section */}
-      <div className="mb-4">
-        <div className="flex items-center text-xs text-gray-400 mb-1">
-          <CalendarIcon size={12} className="mr-1" />
-          <span>Upcoming Assignments</span>
-        </div>
-        {renderUpcomingAssignments(group.baseName)}
-      </div>
-    </div>
-{group.mainClass?.gradeInfo && <GradeDisplay gradeInfo={group.mainClass.gradeInfo} />}
-    {/* Buttons fixed at the bottom */}
-    <div className="flex space-x-2 mt-auto pt-4">
-      <button 
-        onClick={() => setSelectedClass(group)}
-        className="flex-1 px-3 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors text-sm font-medium"
-      >
-        View Details
-      </button>
-      <button 
-        onClick={() => startEditingVariation(group.variations[0], 0)}
-        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors text-sm font-medium"
-      >
-        Edit
-      </button>
-    </div>
-  </motion.div>
-);
+                  {/* Upcoming Assignments Section */}
+                  <div className="mb-4">
+                    <div className="flex items-center text-xs text-gray-400 mb-1">
+                      <CalendarIcon size={12} className="mr-1" />
+                      <span>Upcoming Assignments</span>
+                    </div>
+                    {renderUpcomingAssignments(group.baseName)}
+                  </div>
+                </div>
+
+                {group.mainClass?.gradeInfo && <GradeDisplay gradeInfo={group.mainClass.gradeInfo} />}
+                
+                {/* Buttons fixed at the bottom */}
+                <div className="flex space-x-2 mt-auto pt-4">
+                  <button 
+                    onClick={() => setSelectedClass(group)}
+                    className="flex-1 px-3 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors text-sm font-medium"
+                  >
+                    View Details
+                  </button>
+                  <button 
+                    onClick={() => startEditingVariation(group.variations[0], 0)}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors text-sm font-medium"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </motion.div>
+            );
           })}
         </div>
 
@@ -1060,9 +1086,7 @@ return (
                     <h3 className="text-lg font-medium mb-4 border-b border-neutral-700 pb-2">Class Information</h3>
                     
                     <div className="space-y-4">
-
                       <div>
-                        
                         <label className="block text-sm font-medium text-gray-400 mb-1">Instructor</label>
                         <p className="text-white">{getSafeInstructor(selectedClass.mainClass)}</p>
                       </div>
@@ -1138,14 +1162,13 @@ return (
                                     {dueInfo.label}
                                   </span>
                                 )}
-                                
                               </div>
                               {assignment.description && (
                                 <p className="text-sm text-gray-400 truncate">{assignment.description}</p>
                               )}
                               {assignment.dueDate && (
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Due: {format(assignment.dueDate, "EEE, MMM d 'at' h:mm a")}
+                                  Due: {format(assignment.dueDate, "EEE, MMM d &apos;at&apos; h:mm a")}
                                 </p>
                               )}
                             </div>
@@ -1269,11 +1292,11 @@ return (
                   Delete All Variations
                 </button>
                 <button 
-  onClick={syncCanvasGrades}
-  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
->
-  Sync Grades from Canvas
-</button>
+                  onClick={syncCanvasGrades}
+                  className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
+                >
+                  Sync Grades from Canvas
+                </button>
                 <div className="flex space-x-3">
                   <button 
                     className="px-6 py-2 border border-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-colors font-medium"

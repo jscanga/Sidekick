@@ -8,7 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { RepeatFrequency, Todo, Category } from '@/contexts/todocontext';
 import EditTodoModal from "./EditTodoModal";
-import { RefreshCw, Star, Menu, Key, Download, X, Plus, Layout, List, Move, Eye, EyeOff, GripHorizontal, Trash2 } from 'lucide-react';
+import { RefreshCw, Star, Menu, Key, X, Plus, Layout, Eye, EyeOff, GripHorizontal, Trash2 } from 'lucide-react'; // Removed unused imports
 import {
   DndContext,
   closestCenter,
@@ -30,7 +30,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useTodos } from "@/contexts/todocontext";
-import { getWhiteboardColor } from "@/lib/colors";
+// Removed unused import: import { getWhiteboardColor } from "@/lib/colors";
 
 // Add ClassItem interface to fix TypeScript error
 interface ClassItem {
@@ -52,20 +52,21 @@ interface WhiteboardNodeProps {
   shortlistedTodos: string[];
 }
 
-const testApiRoute = async () => {
-  try {
-    const response = await fetch('/api/canvas-sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ test: true }),
-    });
-    console.log('API route test response:', response.status);
-    alert(`API route status: ${response.status}`);
-  } catch (error) {
-    console.error('API route test failed:', error);
-    alert('API route not found. Check the file location.');
-  }
-};
+// Commented out unused function
+// const testApiRoute = async () => {
+//   try {
+//     const response = await fetch('/api/canvas-sync', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ test: true }),
+//     });
+//     console.log('API route test response:', response.status);
+//     alert(`API route status: ${response.status}`);
+//   } catch (error) {
+//     console.error('API route test failed:', error);
+//     alert('API route not found. Check the file location.');
+//   }
+// };
 
 const extractCourseCode = (text: string): string => {
   if (!text) return '';
@@ -287,7 +288,8 @@ const handleResize = (e: React.MouseEvent) => {
   document.addEventListener('mousemove', handleMouseMove);
   document.addEventListener('mouseup', handleMouseUp);
 };
-const nodeStyle = getNodeStyle();
+
+// Removed unused variable: const nodeStyle = getNodeStyle();
 
 return (
   <div
@@ -515,13 +517,14 @@ const categoryEmoji: Record<Category, string> = {
   other: "📝",
 };
 
-const categoryColors: Record<Category, string> = {
-  academics: "from-purple-500 to-blue-500",
-  health: "from-green-500 to-emerald-500",
-  financial: "from-yellow-500 to-orange-500",
-  social: "from-pink-500 to-rose-500",
-  other: "from-gray-500 to-slate-500",
-};
+// Commented out unused variable
+// const categoryColors: Record<Category, string> = {
+//   academics: "from-purple-500 to-blue-500",
+//   health: "from-green-500 to-emerald-500",
+//   financial: "from-yellow-500 to-orange-500",
+//   social: "from-pink-500 to-rose-500",
+//   other: "from-gray-500 to-slate-500",
+// };
 
 const categoryNames: Record<Category, string> = {
   academics: "Academics",
@@ -659,7 +662,7 @@ export function SortableItem({ todo, toggle, onComplete, onDelete }: SortableIte
 
   const daysLeft = todo.dueDate ? differenceInCalendarDays(todo.dueDate, startOfDay(new Date())) : null;
 
-  let bgClass = "bg-gradient-to-r from-blue-500/35 to-emerald-500/35 hover:bg-neutral-600/35 border-l-4";
+  const bgClass = "bg-gradient-to-r from-blue-500/35 to-emerald-500/35 hover:bg-neutral-600/35 border-l-4"; // Fixed: changed let to const
   let borderColor = "border-gray-500";
   let pulseClass = "";
 
@@ -815,7 +818,7 @@ const parseICSData = (icsData: string) => {
     let currentEvent: any = null;
     
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i].trim();
+      const line = lines[i].trim(); // Fixed: changed let to const
       
       if (line === 'BEGIN:VEVENT') {
         currentEvent = {};
@@ -932,7 +935,7 @@ const ShortlistPanel: React.FC<{
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className={`fixed right-6 bottom-6 z-[1000] flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all ${
+        className={`fixed right-6 bottom-6 z-[10000] flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all ${
           isOpen 
             ? 'bg-yellow-500 hover:bg-yellow-400' 
             : 'bg-neutral-700 hover:bg-neutral-600'
@@ -959,7 +962,7 @@ const ShortlistPanel: React.FC<{
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
             transition={{ type: "spring", damping: 25 }}
-            className="fixed right-6 bottom-24 w-80 h-96 bg-neutral-800/95 backdrop-blur-sm rounded-lg border border-neutral-700 shadow-xl z-[1000] flex flex-col"
+            className="fixed right-6 bottom-24 w-80 h-96 bg-neutral-800/95 backdrop-blur-sm rounded-lg border border-neutral-700 shadow-xl z-[9999] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-neutral-700 flex-shrink-0">
@@ -1054,17 +1057,17 @@ export default function ToDoList() {
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showSyncSettings, setShowSyncSettings] = useState(false);
-  const [showFileUpload, setShowFileUpload] = useState(false);
+  // Removed unused variables: const [showFileUpload, setShowFileUpload] = useState(false);
   const [showNodeMenu, setShowNodeMenu] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(380);
-  const [isResizing, setIsResizing] = useState(false);
+  // Removed unused variable: const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   
   // Whiteboard state
   const [nodes, setNodes] = useState<WhiteboardNode[]>([]);
   const whiteboardRef = useRef<HTMLDivElement>(null); // Fixed: This is now properly typed
   const nodesInitialized = useRef(false);
-  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  // Removed unused variable: const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const nextZIndex = useRef(10);
 
   // Shortlist state
@@ -1130,7 +1133,7 @@ export default function ToDoList() {
       setNodes(defaultNodes);
       nodesInitialized.current = true;
     }
-  }, []);
+  }, [todos]); // Fixed: Added todos dependency
 
   // Save nodes to localStorage whenever they change
   useEffect(() => {
@@ -1231,7 +1234,7 @@ export default function ToDoList() {
 
   // Handle node drag start for z-index layering
   const handleNodeDragStart = (nodeId: string) => {
-    setDraggingNodeId(nodeId);
+    // Removed: setDraggingNodeId(nodeId);
     setNodes(currentNodes =>
       currentNodes.map(node =>
         node.id === nodeId
@@ -1242,14 +1245,14 @@ export default function ToDoList() {
   };
 
   const handleNodeDragEnd = () => {
-    setDraggingNodeId(null);
+    // Removed: setDraggingNodeId(null);
   };
 
   // Sidebar resize handler
   const handleSidebarResize = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsResizing(true);
+    // Removed: setIsResizing(true);
     
     const startX = e.clientX;
     const startWidth = sidebarWidth;
@@ -1261,7 +1264,7 @@ export default function ToDoList() {
     };
     
     const handleMouseUp = () => {
-      setIsResizing(false);
+      // Removed: setIsResizing(false);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -1427,10 +1430,11 @@ export default function ToDoList() {
     }, 2000);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    alert('File upload functionality would go here');
-    setShowFileUpload(false);
-  };
+  // Commented out unused function
+  // const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   alert('File upload functionality would go here');
+  //   setShowFileUpload(false);
+  // };
 
   // Filter functions
   const filterTodosByViewMode = (todos: Todo[]) => {
@@ -1814,7 +1818,7 @@ export default function ToDoList() {
 
       {/* Modals */}
       {showCanvasImport && (
-        <div className="fixed inset-0 bg-black/90 bg-opacity-50 flex items-center justify-center p-4 z-[1001]">
+        <div className="fixed inset-0 bg-black/90 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-neutral-800 rounded-lg shadow-lg w-full max-w-md border border-gray-700">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
@@ -1846,7 +1850,7 @@ export default function ToDoList() {
       )}
 
       {showSyncSettings && (
-        <div className="fixed inset-0 bg-black/90 bg-opacity-50 flex items-center justify-center p-4 z-[1001]">
+        <div className="fixed inset-0 bg-black/90 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-neutral-800 rounded-lg shadow-lg w-full max-w-md border border-neutral-700">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">

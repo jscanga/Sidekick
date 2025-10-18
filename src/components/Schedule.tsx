@@ -1,15 +1,17 @@
 // components/Schedule.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, BookOpen, Plus, Download, ChevronDown, ChevronUp, CheckCircle, Circle, X, Edit, Trash2, Upload } from 'lucide-react';
+import { Calendar, Clock, BookOpen, Plus, Download, ChevronDown, ChevronUp, X, Edit, Trash2 } from 'lucide-react';
 import { useTodos } from "@/contexts/todocontext";
 import { format, differenceInCalendarDays, startOfDay, isSameDay, addDays } from 'date-fns';
 import { useRef } from 'react';
 import { useSchedule } from "@/contexts/schedulecontext";
 import { colorOptions } from '@/lib/colors';
+
 type ColorValue = string;
+
 // Define proper TypeScript interfaces
 interface ClassItem {
   id: number;
@@ -28,13 +30,29 @@ interface ClassItem {
   color: ColorValue;
 }
 
-interface Todo {
-  id: string;
-  text: string;
+interface ICSClassItem {
+  id: number;
+  name: string;
+  instructor: string;
+  days: string[];
+  startTime: string;
+  endTime: string;
+  location: string;
+  canvasLink: string;
+  notesLink: string;
+  midtermDate: string;
+  finalDate: string;
+  classType: string;
+  color: ColorValue;
+}
+
+interface ICSEvent {
+  name?: string;
+  start?: string;
+  end?: string;
+  location?: string;
   description?: string;
-  dueDate?: Date | null;
-  category: string;
-  completed: boolean;
+  rrule?: string;
 }
 
 const Schedule = () => {
@@ -88,13 +106,13 @@ const Schedule = () => {
   const parseICSData = (icsData: string) => {
     try {
       console.log("=== Parsing ICS Data ===");
-      const events: any[] = [];
+      const events: ICSEvent[] = [];
       const lines = icsData.split(/\r?\n/);
-      let currentEvent: any = null;
+      let currentEvent: ICSEvent | null = null;
       let inEvent = false;
       
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].trim();
+        const line = lines[i].trim();
         if (!line) continue;
         
         if (line.startsWith(' ') && currentEvent) {
@@ -157,7 +175,7 @@ const Schedule = () => {
     }
   };
 
-  const processEvent = (eventData: any) => {
+  const processEvent = (eventData: ICSEvent): ICSClassItem | null => {
     if (!eventData.start || !eventData.end) {
       console.log('Skipping event - missing start or end time:', eventData);
       return null;
@@ -168,7 +186,7 @@ const Schedule = () => {
       return null;
     }
     
-    const classItem: ClassItem = {
+    const classItem: ICSClassItem = {
       id: Date.now() + Math.random(),
       name: eventData.name || 'Imported Class',
       instructor: extractInstructor(eventData.description) || 'Instructor',
@@ -188,7 +206,7 @@ const Schedule = () => {
     return classItem;
   };
 
-  const extractInstructor = (description: string) => {
+  const extractInstructor = (description?: string) => {
     if (!description) return 'Instructor';
     
     const patterns = [
@@ -245,7 +263,7 @@ const Schedule = () => {
     return '09:00';
   };
 
-  const getDaysFromRRule = (rrule: string) => {
+  const getDaysFromRRule = (rrule?: string) => {
     if (!rrule) return null;
     
     const dayMap: { [key: string]: string } = {
@@ -299,7 +317,7 @@ const Schedule = () => {
         
       } catch (error) {
         console.error('Error parsing ICS file:', error);
-        alert('Failed to parse ICS file. Please make sure it\'s a valid .ics file from Peoplesoft.');
+        alert('Failed to parse ICS file. Please make sure it&apos;s a valid .ics file from Peoplesoft.');
       }
     };
     
@@ -307,23 +325,23 @@ const Schedule = () => {
   };
 
   // Class form state
-const [newClass, setNewClass] = useState<{
-  name: string;
-  instructor: string;
-  days: string[];
-  startTime: string;
-  endTime: string;
-  location: string;
-  color: ColorValue;
-}>({
-  name: '',
-  instructor: '',
-  days: [],
-  startTime: '09:00',
-  endTime: '10:00',
-  location: '',
-  color: colorOptions[0].value as ColorValue
-});
+  const [newClass, setNewClass] = useState<{
+    name: string;
+    instructor: string;
+    days: string[];
+    startTime: string;
+    endTime: string;
+    location: string;
+    color: ColorValue;
+  }>({
+    name: '',
+    instructor: '',
+    days: [],
+    startTime: '09:00',
+    endTime: '10:00',
+    location: '',
+    color: colorOptions[0].value as ColorValue
+  });
 
   // Get days of the week
   const getDays = () => {
@@ -435,60 +453,60 @@ const [newClass, setNewClass] = useState<{
   };
 
   // Handle adding a new class
-const handleAddClass = () => {
-  setFormError('');
-  
-  if (!newClass.name) {
-    setFormError('Class name is required');
-    return;
-  }
-  
-  if (newClass.days.length === 0) {
-    setFormError('Please select at least one day');
-    return;
-  }
-  
-  if (newClass.startTime >= newClass.endTime) {
-    setFormError('End time must be after start time');
-    return;
-  }
-  
-  if (hasSchedulingConflict(newClass as ClassItem)) {
-    const conflictingClass = findConflictingClass(newClass as ClassItem);
-    setFormError(`This class would conflict with ${conflictingClass?.name} on ${conflictingClass?.days.join(', ')}`);
-    return;
-  }
-  
-  // Create the complete ClassItem with all required properties
-  const newClassItem: ClassItem = {
-    id: Date.now(),
-    name: newClass.name,
-    instructor: newClass.instructor,
-    days: newClass.days,
-    startTime: newClass.startTime,
-    endTime: newClass.endTime,
-    location: newClass.location,
-    color: newClass.color,
-    // Add the missing properties with default values
-    canvasLink: '',
-    notesLink: '',
-    midtermDate: '',
-    finalDate: '',
-    classType: 'lecture'
+  const handleAddClass = () => {
+    setFormError('');
+    
+    if (!newClass.name) {
+      setFormError('Class name is required');
+      return;
+    }
+    
+    if (newClass.days.length === 0) {
+      setFormError('Please select at least one day');
+      return;
+    }
+    
+    if (newClass.startTime >= newClass.endTime) {
+      setFormError('End time must be after start time');
+      return;
+    }
+    
+    if (hasSchedulingConflict(newClass as ClassItem)) {
+      const conflictingClass = findConflictingClass(newClass as ClassItem);
+      setFormError(`This class would conflict with ${conflictingClass?.name} on ${conflictingClass?.days.join(', ')}`);
+      return;
+    }
+    
+    // Create the complete ClassItem with all required properties
+    const newClassItem: ClassItem = {
+      id: Date.now(),
+      name: newClass.name,
+      instructor: newClass.instructor,
+      days: newClass.days,
+      startTime: newClass.startTime,
+      endTime: newClass.endTime,
+      location: newClass.location,
+      color: newClass.color,
+      // Add the missing properties with default values
+      canvasLink: '',
+      notesLink: '',
+      midtermDate: '',
+      finalDate: '',
+      classType: 'lecture'
+    };
+    
+    setClasses([...classes, newClassItem]);
+    setShowAddClassModal(false);
+    setNewClass({
+      name: '',
+      instructor: '',
+      days: [],
+      startTime: '09:00',
+      endTime: '10:00',
+      location: '',
+      color: colorOptions[0].value as ColorValue
+    });
   };
-  
-  setClasses([...classes, newClassItem]);
-  setShowAddClassModal(false);
-setNewClass({
-  name: '',
-  instructor: '',
-  days: [],
-  startTime: '09:00',
-  endTime: '10:00',
-  location: '',
-  color: colorOptions[0].value as ColorValue
-});
-};
 
   // Handle updating a class
   const handleUpdateClass = () => {
@@ -909,7 +927,7 @@ setNewClass({
                       </a>
                     </li>
                     <li>Navigate to your class schedule</li>
-                    <li>Click "Download (.ics)" in the top right</li>
+                    <li>Click &quot;Download (.ics)&quot; in the top right</li>
                   </ol>
                 </div>
               </div>
@@ -931,7 +949,7 @@ setNewClass({
                 />
                 <div className="flex flex-col items-center justify-center">
                   <Download size={48} className="text-gray-400 mb-3" />
-                  <p className="text-gray-300 mb-2">Drag & drop your .ics file here</p>
+                  <p className="text-gray-300 mb-2">Drag &amp; drop your .ics file here</p>
                   <p className="text-gray-400 text-sm mb-4">or</p>
                   <button
                     onClick={() => fileInputRef.current?.click()}
