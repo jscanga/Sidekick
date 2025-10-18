@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
           course_name: course.name,
           course_code: course.course_code,
           error: error instanceof Error ? error.message : 'Unknown error',
-          debug: { step: 'course_processing' },
+          debug: { steps: ['course_processing'] },
           calculatedGrade: null,
           calculatedScore: null
         });
