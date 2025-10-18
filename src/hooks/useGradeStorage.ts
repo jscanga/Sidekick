@@ -33,6 +33,40 @@ interface StoredGrade {
   lastUpdated: Date;
   semester: string;
 }
+
+// Add interface for course data
+interface CourseData {
+  course_id: string | number;
+  course_name: string;
+  course_code: string;
+}
+
+// Add interface for parsed grade from localStorage
+interface ParsedGrade {
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  gradeInfo: {
+    currentGrade?: string | null;
+    currentScore?: number | null;
+    finalGrade?: string | null;
+    finalScore?: number | null;
+    calculatedGrade?: string | null;
+    calculatedScore?: number | null;
+    totalPoints?: number;
+    earnedPoints?: number;
+    assignmentCount?: number;
+    gradedAssignmentCount?: number;
+    completionPercentage?: number;
+    gradingScale?: string;
+    lastSynced?: string;
+    gradeStatus?: 'calculated' | 'official' | 'pending' | 'not_available';
+    gradeSource?: 'calculated' | 'official';
+  };
+  lastUpdated: string;
+  semester: string;
+}
+
 export const useGradeStorage = () => {
   const [grades, setGrades] = useState<StoredGrade[]>([]);
 
@@ -41,9 +75,9 @@ export const useGradeStorage = () => {
     const storedGrades = localStorage.getItem('canvasGrades');
     if (storedGrades) {
       try {
-        const parsedGrades = JSON.parse(storedGrades);
+        const parsedGrades: ParsedGrade[] = JSON.parse(storedGrades);
         // Convert date strings back to Date objects
-        const gradesWithDates = parsedGrades.map((grade: any) => ({
+        const gradesWithDates = parsedGrades.map((grade: ParsedGrade) => ({
           ...grade,
           lastUpdated: new Date(grade.lastUpdated),
           gradeInfo: {
@@ -65,7 +99,7 @@ export const useGradeStorage = () => {
   };
 
   // Add or update a grade
-  const updateGrade = (courseData: any, gradeInfo: GradeInfo) => {
+  const updateGrade = (courseData: CourseData, gradeInfo: GradeInfo) => {
     const semester = getCurrentSemester();
     const newGrade: StoredGrade = {
       courseId: courseData.course_id.toString(),
@@ -130,7 +164,7 @@ export const useGradeStorage = () => {
 };
 
 // Helper functions
-const getCurrentSemester = () => {
+const getCurrentSemester = (): string => {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
