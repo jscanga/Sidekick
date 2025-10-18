@@ -3,7 +3,6 @@
 
 import ToDoList from "@/components/ToDoList";
 import Layout from "@/components/Layout";
-import type { AppProps } from "next/app";
 
 export default function TodosPage() {
   return (
