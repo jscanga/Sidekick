@@ -1769,7 +1769,7 @@ const Classes = () => {
                       </a>
                     </li>
                     <li>Navigate to your class schedule</li>
-                    <li>Click "Download (.ics)" in the top right</li>
+                    <li>Click &quot;Download (.ics)&quot; in the top right</li>
                   </ol>
                 </div>
               </div>
